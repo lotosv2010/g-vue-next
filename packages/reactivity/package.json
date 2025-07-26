@@ -1,0 +1,30 @@
+{
+  "name": "@g-vue-next/reactivity",
+  "version": "3.4.0",
+  "description": "",
+  "module": "dist/reactivity.esm.js",
+  "unpkg": "dist/reactivity.global.js",
+  "buildOptions": {
+    "name": "GVueNextReactivity",
+    "formats": [
+      "esm-bundler",
+      "esm-browser",
+      "esm",
+      "global",
+      "cjs"
+    ]
+  },
+  "scripts": {},
+  "keywords": [
+    "vue-next",
+    "vue",
+    "vue3",
+    "reactivity"
+  ],
+  "author": "Robin",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.1",
+  "dependencies": {
+    "@g-vue-next/shared": "workspace:^"
+  }
+}

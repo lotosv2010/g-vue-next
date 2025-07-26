@@ -1,0 +1,6 @@
+packages:
+  - 'packages/*'
+
+
+linkWorkspacePackages: true # 允是否许链接 workspace 包
+shamefullyHoist: false  # 是否允许将 workspace 包提升到根目录

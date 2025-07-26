@@ -1,0 +1,15 @@
+{
+  "name": "@g-vue-next/shared",
+  "version": "3.4.0",
+  "description": "",
+  "module": "dist/shared.esm.js",
+  "buildOptions": {
+    "name": "GVueNextShared",
+    "formats": ["esm-bundler", "esm", "cjs"]
+  },
+  "scripts": {},
+  "keywords": ["vue-next", "vue", "vue3", "shared"],
+  "author": "Robin",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.1"
+}

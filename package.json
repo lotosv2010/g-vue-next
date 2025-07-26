@@ -1,0 +1,26 @@
+{
+  "private": true,
+  "version": "3.4.0",
+  "type": "module",
+  "description": "Vue 3.4 源码",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "dev-reactivity": "node scripts/dev.js reactivity -f all",
+    "dev-runtime-core": "node scripts/dev.js runtime-core -f all",
+    "dev-runtime-dom": "node scripts/dev.js runtime-dom -f all",
+    "dev-shared": "node scripts/dev.js shared -f all",
+    "dev-vue": "node scripts/dev.js vue -f all",
+    "preview": "http-server -d -p 9090 -o /examples/"
+  },
+  "license": "ISC",
+  "packageManager": "pnpm@10.13.1",
+  "dependencies": {
+    "vue": "^3.5.18"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.8",
+    "http-server": "^14.1.1",
+    "minimist": "^1.2.8",
+    "typescript": "^5.8.3"
+  }
+}

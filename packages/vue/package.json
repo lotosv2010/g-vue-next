@@ -1,0 +1,28 @@
+{
+  "name": "g-vue-next",
+  "version": "3.4.0",
+  "description": "",
+  "module": "dist/vue.esm.js",
+  "unpkg": "dist/vue.global.js",
+  "buildOptions": {
+    "name": "GVueNext",
+    "formats": [
+      "esm-bundler",
+      "esm-browser",
+      "esm",
+      "global",
+      "cjs"
+    ]
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "vue-next"
+  ],
+  "author": "Robin",
+  "license": "ISC",
+  "dependencies": {
+    "@g-vue-next/reactivity": "workspace:^",
+    "@g-vue-next/shared": "workspace:^"
+  }
+}
