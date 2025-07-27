@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>reactivity</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // import { reactive } from '../../node_modules/vue/dist/vue.esm-browser.js'
+    import { reactive } from '../../packages/reactivity/dist/reactivity.esm.js'
+
+    const app = document.querySelector('#app')
+
+    // reactive 让数据变成响应式
+    // effect  副作用，数据变化后可以让 effect 函数重新执行，组件、watch、computed 都是基于 effect 实现的
+    const obj = { name: 'test', age: 18}
+    const state = reactive(obj)
+    const state2 = reactive(obj)
+    const state3 = reactive(state)
+
+    // 1.测试缓存
+    console.log(state === state2)
+    console.log(state === state3)
+    console.log(state2 === state3)
+    
+    console.log(state.name, state.age)
+
+    setTimeout(() => {
+      state.name = 'test1'
+      state.age = 19
+
+      console.log(state.name, state.age)
+    }, 1000);
+
+  </script>
+</body>
+</html>
