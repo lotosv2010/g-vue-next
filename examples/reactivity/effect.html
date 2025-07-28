@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>effect</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // import { reactive, effect } from '../../node_modules/vue/dist/vue.esm-browser.js'
+    import { reactive, effect } from '../../packages/reactivity/dist/reactivity.esm.js'
+
+    const app = document.querySelector('#app')
+
+    // reactive 让数据变成响应式
+    // effect  副作用，数据变化后可以让 effect 函数重新执行，组件、watch、computed 都是基于 effect 实现的
+    const obj = { name: 'test', age: 18, flag: true, address: { province: '北京' , city: '北京', street: '朝阳' }}
+    const state = reactive(obj)
+    
+    // 2.测试嵌套 effect
+    // effect(() => {
+    //   console.log('effect run')
+    //   app.innerHTML = `${state.name}, ${state.age}`
+    // })
+
+    // 3.测试 effect 嵌套
+    // effect(() => {
+    //   console.log('effect run')
+    //   app.innerHTML = `${state.name}`
+    //   effect(() => {
+    //     console.log('effect2 run')
+    //     app.innerHTML = `${state.name}`
+    //   })
+    //   console.log('effect run')
+    //   app.innerHTML = `${state.age}`
+    // })
+
+    // // 更新
+    // setTimeout(() => {
+    //   state.name = 'test1'
+    //   state.age = 19
+    // }, 1000)
+
+    // setTimeout(() => {
+    //   state.age++ // 这里访问age不会出发嵌套的 effect，因为实在 effect 之外访问的 age
+    // }, 2000);
+
+    // 4.测试条件
+    // effect(() => {
+    //   console.log('effect run')
+    //   app.innerHTML = state.flag ? `${state.name}` : `${state.age}`
+    // })
+
+    // setTimeout(() => {
+    //   state.flag = false
+    // }, 1000);
+
+    // setTimeout(() => {
+    //   // 此时 flag 已经被修改为 false，所以 state.name 不会触发 effect
+    //   state.name = 'test1'
+    // }, 2000);
+
+    // 5.测试多次获取值
+    // effect(() => {
+    //   console.log('effect run')
+    //   app.innerHTML = state.flag ? `${state.name}` : `${state.age}`
+    //   // app.innerHTML = state.flag ? `${state.name}${state.a}${state.b}${state.c}` : `${state.age}`
+    // })
+
+    // setTimeout(() => {
+    //   state.flag = false
+    //   setTimeout(() => {
+    //     // 此时 flag 已经被修改为 false，所以 state.name 不会触发 effect
+    //     console.log('修改 name 属性后，不应该出发 effect，因为此时的 依赖项为 {flag, age}')
+    //     state.name = 'test1'
+    //   }, 1000);
+    // }, 1000);
+
+    // 6.测试调度执行
+    // const runner = effect(() => { 
+    //   console.log('effect run')
+    //   app.innerHTML = `${state.name}, ${state.age}`
+    // }, {
+    //   scheduler() {
+    //     console.log('数据更新了，不重新渲染，走自己的逻辑')
+    //     runner()// 用户自己决定何时重新渲染
+    //   }
+    // })
+
+    // setTimeout(() => {
+    //   state.name = 'test1'
+    // }, 1000);
+
+    // 7.测试防止递归调用
+    // effect(() => {
+    //   console.log('effect run')
+    //   app.innerHTML = `${state.name}, ${state.age}`
+    //   state.name = 'test1' + Math.random()
+    // })
+
+    // 8.测试深度代理
+    effect(() => {
+      console.log('effect run')
+      app.innerHTML = `${state.address.province}, ${state.address.city}, ${state.address.street}`
+    })
+
+    setTimeout(() => {
+      state.address.province = '上海'
+      state.address.city = '上海'
+      state.address.street = '虹口'
+    }, 1000);
+  </script>
+</body>
+</html>
