@@ -6,3 +6,5 @@ export const isObject = (val: any) => val !== null && typeof val === 'object'
 export const hasChanged = (value: any, oldValue: any) => !Object.is(value, oldValue)
 // 合并对象
 export const extend = Object.assign
+// 判断是否为数组
+export const isArray = Array.isArray
