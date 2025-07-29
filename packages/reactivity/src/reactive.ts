@@ -39,3 +39,7 @@ const createReactiveObject = (target: any) => {
 export const reactive = (target: any) => {
   return createReactiveObject(target)
 }
+
+export const toReactive = <T extends unknown>(value: T): T => {
+  return isObject(value) ? reactive(value) : value
+}

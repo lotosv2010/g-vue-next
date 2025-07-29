@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ref</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // import { ref, effect } from '../../node_modules/vue/dist/vue.esm-browser.js'
+    import { ref, effect } from '../../packages/reactivity/dist/reactivity.esm.js'
+
+    const app = document.querySelector('#app')
+
+    const name = ref('test')
+
+    effect(() => {
+      console.log('effect run', name)
+      app.innerHTML = `${name.value}`
+    })
+
+    setTimeout(() => {
+      name.value = 'test1'
+    }, 1000);
+
+  </script>
+</body>
+</html>
