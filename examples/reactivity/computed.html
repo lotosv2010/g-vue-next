@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>computed</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // import { computed, reactive, effect } from '../../node_modules/vue/dist/vue.esm-browser.js';
+      import {computed, reactive, effect} from "../../packages/reactivity/dist/reactivity.esm.js";
+
+      const obj = { name: "test", age: 10 };
+      const state = reactive(obj);
+
+      const name = computed({
+        get: (oldValue) => {
+          console.log("name computed run", oldValue);
+          return state.name + '!';
+        },
+        set: value => {
+          // 这里是不能直接修改name的，可以通过修改依赖的state的name的值来修改name的
+          state.name = value;
+          // name.value = value; // 错误的写法
+        }
+      });
+      const age = computed(() => {
+        console.log("age computed run");
+        return state.age + '!';
+      });
+      effect(() => {
+        // 这里第二次访问name时由于没有脏数据，将不会再次执行getter，也不会收集effect
+        console.log('name', name.value);
+        console.log('name', name.value);
+        console.log('name', name.value);
+        console.log('age', age.value);
+        console.log('age', age.value);
+        console.log('age', age.value);
+        document.querySelector("#app").innerHTML = `
+          <div>${name.value}</div>
+          <div>${age.value}</div>
+        `;
+      })
+
+      setTimeout(() => {
+        // name.value = "test2";
+        state.name = "test2";
+        // state.age = 11;
+      }, 1000);
+    </script>
+  </body>
+</html>

@@ -1,10 +1,6 @@
 import { isObject } from "@g-vue-next/shared"
 import { mutableHandlers } from "./baseHandler"
-
-// 响应式标识
-export const enum ReactiveFlags {
-  IS_REACTIVE = "__v_isReactive", // 判断对象是否是响应式对象
-}
+import { ReactiveFlags } from "./constants"
 
 // 缓存对象, 避免重复创建代理对象
 const reactiveMap = new WeakMap()

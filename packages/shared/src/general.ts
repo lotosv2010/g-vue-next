@@ -8,3 +8,5 @@ export const hasChanged = (value: any, oldValue: any) => !Object.is(value, oldVa
 export const extend = Object.assign
 // 判断是否为数组
 export const isArray = Array.isArray
+// 创建一个空函数
+export const NOOP = () => {}

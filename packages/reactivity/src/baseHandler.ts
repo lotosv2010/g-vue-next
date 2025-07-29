@@ -1,6 +1,6 @@
 import { hasChanged, isObject } from "@g-vue-next/shared"
-import { TrackOpTypes, TriggerOpTypes } from "./constants"
-import { reactive, ReactiveFlags } from "./reactive"
+import { ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./constants"
+import { reactive } from "./reactive"
 import { track, trigger } from "./reactiveEffect"
 
 class BaseReactiveHandler implements ProxyHandler<any> {

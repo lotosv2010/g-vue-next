@@ -1,5 +1,6 @@
 import { extend } from "@g-vue-next/shared"
 import { Dep } from "./dep"
+import { DirtyLevels } from "./constants"
 
 // 执行 effect 之前的清理逻辑
 const preCleanupEffect = (effect: ReactiveEffect) => {
@@ -26,15 +27,26 @@ const postCleanupEffect = (effect: ReactiveEffect) => {
 export let activeEffect: any // 当前激活的effect
 
 // 创建响应式 effect
-export class ReactiveEffect {
+export class ReactiveEffect<T = any> {
   public active = true // 是否激活
   deps: any[] = [] // 存储依赖关系
   _trackId = 0 // 用于记录 effect 执行的次数, 防止重复收集依赖
   _depsLength = 0 // 用于记录 deps 的长度
   _running = 0 // 用于记录 effect 是否正在执行
+  _dirtyLevel = DirtyLevels.Dirty // 脏值级别, 用于标记需要重新计算的属性
 
   constructor(public fn: Function, public scheduler?: Function) {}
+
+  public get dirty() {
+    return this._dirtyLevel >= DirtyLevels.Dirty
+  }
+  public set dirty(v: boolean) {
+    this._dirtyLevel = v ? DirtyLevels.Dirty : DirtyLevels.NotDirty
+  }
+
   run() {
+    // 每次执行后 effect 变为不脏
+    this._dirtyLevel = DirtyLevels.NotDirty
     // 如果没有激活，则直接执行fn
     if (!this.active) {
       return this.fn()
@@ -122,6 +134,10 @@ export const trackEffect = (effect: ReactiveEffect, dep: Dep) => {
 // 触发：将dep中的effect添加到effectScheduler中执行
 export const triggerEffects = (dep: Dep) => {
   for (const effect of dep.keys()) {
+    // 当前的值是不脏的，触发更新需将值变脏
+    if (effect._dirtyLevel < DirtyLevels.Dirty) {
+      effect._dirtyLevel = DirtyLevels.Dirty
+    }
     if (!effect._running) {
       if (effect.scheduler) {
         // 执行调度器，等价于调用 effect.run()
