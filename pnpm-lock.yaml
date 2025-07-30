@@ -31,6 +31,15 @@ importers:
         specifier: workspace:^
         version: link:../shared
 
+  packages/runtime-core:
+    dependencies:
+      '@g-vue-next/reactivity':
+        specifier: workspace:^
+        version: link:../reactivity
+      '@g-vue-next/shared':
+        specifier: workspace:^
+        version: link:../shared
+
   packages/shared: {}
 
   packages/vue:
@@ -38,6 +47,9 @@ importers:
       '@g-vue-next/reactivity':
         specifier: workspace:^
         version: link:../reactivity
+      '@g-vue-next/runtime-core':
+        specifier: workspace:^
+        version: link:../runtime-core
       '@g-vue-next/shared':
         specifier: workspace:^
         version: link:../shared

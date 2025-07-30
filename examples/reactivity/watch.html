@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>watch</title>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // import { watch, reactive } from '../../node_modules/vue/dist/vue.esm-browser.js';
+    import { watch, reactive } from "../../packages/vue/dist/vue.esm.js";
+
+    const state = reactive({ name: "test", age: 10, child: { name: 'child'} });
+
+    setTimeout(() => {
+      state.child.name = "test2";
+      // state.age = 11;
+    }, 1000);
+
+    watch(state, (newVal, oldVal) => {
+      console.log(newVal, oldVal);
+    }, {
+      immediate: true,
+      // deep: false
+      // deep: true
+      deep: 2
+    });
+
+  </script>
+</body>
+
+</html>

@@ -39,3 +39,7 @@ export const reactive = (target: any) => {
 export const toReactive = <T extends unknown>(value: T): T => {
   return isObject(value) ? reactive(value) : value
 }
+
+export const isReactive = (value: unknown): boolean => {
+  return !!(value && value[ReactiveFlags.IS_REACTIVE])
+}
