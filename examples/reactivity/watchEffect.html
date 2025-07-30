@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>watchEffect</title>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // import { watchEffect, reactive, watch } from '../../node_modules/vue/dist/vue.esm-browser.js';
+    import { watchEffect, reactive, watch } from "../../packages/vue/dist/vue.esm.js";
+
+    const state = reactive({ name: "test", age: 10 });
+
+    const unwatch = watchEffect((onCleanup) => {
+      console.log(state.name, state.age)
+      onCleanup(() => {
+        if (count > 3) {
+          clearInterval(timer)
+        }
+      })
+    })
+
+    const unwatch2 = watch(
+      () => state.name,
+      (newVal, oldVal, onCleanup) => {
+        console.log(newVal, oldVal);
+        onCleanup(() => {
+          if (count > 3) {
+            clearInterval(timer)
+          }
+        })
+      }, {
+        immediate: true
+      });
+
+    let count = 0
+    let timer = setInterval(() => {
+      state.name = "test" + (++count);
+      if (count > 3) {
+        // 停止侦听器
+        unwatch()
+        unwatch2()
+      }
+    }, 1000);
+  </script>
+</body>
+
+</html>

@@ -49,6 +49,7 @@ class RefImpl<T> {
 
 export const trackRefValue = (ref: any) => {
   if(activeEffect) {
+    //! 这需要注意 ref.dep 优质的时候，使用 ref.dep ，否则创建 ref.dep ，防止直接创建丢失之前的依赖关系
     trackEffect(activeEffect, ref.dep ??= createDep(() => (ref.dep = undefined), undefined))
   }
 }

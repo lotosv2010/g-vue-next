@@ -10,24 +10,36 @@
 <body>
   <div id="app"></div>
   <script type="module">
-    // import { watch, reactive } from '../../node_modules/vue/dist/vue.esm-browser.js';
-    import { watch, reactive } from "../../packages/vue/dist/vue.esm.js";
+    // import { watch, reactive, ref } from '../../node_modules/vue/dist/vue.esm-browser.js';
+    import { watch, reactive, ref } from "../../packages/vue/dist/vue.esm.js";
 
-    const state = reactive({ name: "test", age: 10, child: { name: 'child'} });
+    const state = reactive({ name: "test", age: 10, child: { name: 'child' } });
+    const count = ref(0)
 
     setTimeout(() => {
       state.child.name = "test2";
       // state.age = 11;
+      count.value++;
     }, 1000);
 
-    watch(state, (newVal, oldVal) => {
-      console.log(newVal, oldVal);
-    }, {
+    watch(
+      state,
+      // () => state.age,
+      (newVal, oldVal) => {
+        console.log(newVal, oldVal);
+      }, {
       immediate: true,
       // deep: false
       // deep: true
       deep: 2
     });
+
+    watch(
+      count,
+      (newVal, oldVal) => {
+        console.log('ref', newVal, oldVal);
+      }
+    );
 
   </script>
 </body>

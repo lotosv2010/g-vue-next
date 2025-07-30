@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>cleanup</title>
+</head>
+<body>
+  <script>
+    // vue 2 中清理接口返回第一次比第二次慢的问题
+    let timer = 4000
+    const getData = async (params) => { 
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          resolve(params)
+        }, timer -= 2000)
+      })
+    }
+
+    const arr = [];
+    const get = async (data) => {
+      //  第二次的会将第一次的flag变为false
+      let flag = true;
+
+      // 循环取出前面的 () => flag = false 执行
+      while(arr.length) {
+        const cb = arr.shift()
+        cb()
+      }
+      // 将修改flag 的操作放入 arr 数组中，形成一个闭包，等待下一次执行
+      arr.push(() => flag = false)
+
+      // 获取接口返回的数据
+      const res = await getData(data)
+      console.log(data, flag)
+      // 判断 flag 值，如果为 true 则展示数据
+      if(flag) {
+        console.log(res) // 模拟展示到页面
+      }
+    } 
+    
+    
+    get('1')
+    get('2')
+
+  </script>
+</body>
+</html>

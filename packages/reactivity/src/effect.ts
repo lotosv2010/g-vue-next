@@ -67,6 +67,13 @@ export class ReactiveEffect<T = any> {
       activeEffect = lastEffect // 恢复上一次激活的effect
     }
   }
+  stop() {
+    if (this.active) {
+      preCleanupEffect(this)
+      postCleanupEffect(this)
+      this.active = false
+    }
+  }
 }
 
 // 创建effect
