@@ -1,30 +1,29 @@
 {
-  "name": "g-vue-next",
+  "name": "@g-vue-next/runtime-dom",
   "version": "3.4.0",
   "description": "",
-  "module": "dist/vue.esm.js",
-  "unpkg": "dist/vue.global.js",
+  "module": "dist/runtime-dom.esm.js",
   "buildOptions": {
-    "name": "GVueNext",
+    "name": "GVueNextRuntimeDom",
     "formats": [
       "esm-bundler",
-      "esm-browser",
       "esm",
-      "global",
       "cjs"
     ]
   },
+  "scripts": {},
   "keywords": [
+    "vue-next",
     "vue",
     "vue3",
-    "vue-next"
+    "runtime-dom"
   ],
   "author": "Robin",
   "license": "ISC",
+  "packageManager": "pnpm@10.12.1",
   "dependencies": {
     "@g-vue-next/reactivity": "workspace:^",
     "@g-vue-next/runtime-core": "workspace:^",
-    "@g-vue-next/runtime-dom": "workspace:^",
     "@g-vue-next/shared": "workspace:^"
   }
 }
