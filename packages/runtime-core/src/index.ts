@@ -1,1 +1,4 @@
 export * from './apiWatch'
+export * from './renderer'
+export * from './h'
+export * from './vnode'

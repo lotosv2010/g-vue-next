@@ -1,0 +1,111 @@
+import { type Ref } from "@g-vue-next/reactivity";
+import type { RendererElement, RendererNode } from "./renderer";
+import { isArray, isString, ShapeFlags } from "@g-vue-next/shared";
+
+export type VNodeRef = 
+  | string
+  | Ref
+  | ((ref: Element | null, refs: Record<string, any>) =>void)
+
+export type VNodeProps = { 
+  key?: PropertyKey,
+  ref?: VNodeRef
+}
+
+export type VNodeTypes = 
+  | string
+  | VNode
+  | typeof Text
+  | typeof Comment
+
+export type VNodeChildAtom = 
+  | VNode
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | void
+
+export type VNodeArrayChildren = Array<VNodeArrayChildren | VNodeChildAtom>
+
+export type VNodeChildren = VNodeChildAtom | VNodeArrayChildren
+
+export type VNodeNormalizedChildren = 
+  | string
+  | VNodeArrayChildren
+  | null
+
+export interface VNode<
+  HostNode = RendererNode,
+  HostElement = RendererElement,
+  ExtraProps = { [key: string]: any }
+> {
+  // core
+  __v_isVNode: true;
+  type: VNodeTypes;
+  key: PropertyKey | null
+  props: (VNodeProps & ExtraProps) | null
+
+  children: VNodeNormalizedChildren
+  // DOM
+  el: HostNode | null
+  
+  // optimization
+  shapeFlag: number
+}
+
+const normalizeKey = ({ key }: VNodeProps): VNodeProps['key'] => 
+  key != null ? key : null
+
+function createBaseVNode(
+  type: VNodeTypes,
+  props: (VNodeProps | Record<string, unknown>) | null = null,
+  children: unknown = null
+) {
+  const shapeFlag = isString(type) ? ShapeFlags.ELEMENT : 0 // 是否是元素节点
+
+  const vnode = {
+    __v_isVNode: true,
+    type, // 类型
+    props, // 属性
+    children, // 子节点
+    shapeFlag, // 元素节点的标识
+    el: null, // 虚拟节点对应的真实元素节点
+    key: props && normalizeKey(props), // 虚拟节点的key
+  } as VNode
+
+  // 如果有子节点，则标记子节点的类型
+  if(children) {
+    // 获取子节点的类型
+    let type = 0
+    if (isArray(children)) {
+      type = ShapeFlags.ARRAY_CHILDREN // 数组
+    } else {
+      type = ShapeFlags.TEXT_CHILDREN // 文本
+    }
+    // 按位或运算，将type的值添加到shapeFlag中
+    vnode.shapeFlag |= type 
+  }
+
+  return vnode
+}
+
+function _createVNode(
+  type: VNodeTypes,
+  props: (VNodeProps | Record<string, unknown>) | null = null,
+  children: unknown = null
+): VNode {
+  return createBaseVNode(type, props, children)
+}
+
+// 判断两个节点是否相同
+export function isSameVNodeType(n1: VNode, n2: VNode): boolean {
+  return n1.type === n2.type && n1.key === n2.key
+}
+
+export const isVNode = (value: any): value is VNode => {
+  return value ? value.__v_isVNode === true : false
+}
+
+export const createVNode = _createVNode

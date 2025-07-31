@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>createRenderer</title>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // import { createRenderer, h, } from "../../node_modules/vue/dist/vue.esm-browser.js";
+    import { createRenderer, h } from "../../packages/runtime-dom/dist/runtime-dom.esm.js";
+    // import { rendererOptions } from "../../packages/runtime-dom/dist/runtime-dom.esm.js";
+
+    // 1.createRenderer 我们可以自己创建渲染器 (让我们自己提供渲染的方式)
+    // 2.render 用内置的渲染器来进行渲染 (渲染dom元素的)
+    // 3.h方法可以创建一个虚拟dom (type,propsOrChildren,children)
+
+    const { render } = createRenderer({
+      createElement(tag) {
+        return document.createElement(tag);
+      },
+      setElementText(el, text) {
+        el.textContent = text;
+      },
+      insert(el, parent, anchor) {
+        parent.insertBefore(el, anchor || null);
+      },
+      patchProp(el, key, prevValue, nextValue) {
+        el.setAttribute(key, nextValue);
+      },
+    });
+
+    // const { render } = createRenderer(rendererOptions);
+    // console.log(rendererOptions);
+    render(
+      h("div", 
+        { 
+          id: 'main', 
+          style: "color: red", 
+          class: 'main div red', 
+        }, 
+        "hello world"
+      ), document.getElementById("app"));
+  </script>
+</body>
+
+</html>
