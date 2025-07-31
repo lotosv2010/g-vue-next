@@ -111,7 +111,7 @@ function baseCreateRenderer<
     // 如果老节点存在，并且新老节点不同，则直接移除老节点，再插入新的节点
     if (n1 && !isSameVNodeType(n1, n2)) {
       unmount(n1, parentComponent, parentSuspense, true)
-      n1 = null
+      n1 = null // 将老节点置为空，后面会挂载新节点
     }
 
     const { type, shapeFlag} = n2
@@ -155,6 +155,8 @@ function baseCreateRenderer<
   ) => {
     const { type, props, shapeFlag, children } = vnode
     // 创建元素节点
+    // 第一次渲染的时候我么让虚拟节点和真实的dom 创建关联 vnode.el = 真实dom
+    // 第二次渲染新的vnode，可以和上一次的vnode做比对，之后更新对应的el元素，可以后续再复用这个dom元素
     const el: any = (vnode.el = hostCreateElement(type as string, namespace))
     // 设置属性
     if (props) {
@@ -197,7 +199,7 @@ function baseCreateRenderer<
     doRemove = false,
     optimize = false
   ) => {
-
+    hostRemove(vnode.el as any)
   }
 
   const render = (vnode, container, namespace) => {
@@ -207,6 +209,9 @@ function baseCreateRenderer<
     // 3. 销毁渲染
     if (vnode == null) {
       // 销毁
+      if (container._vnode) { // 如果当前 container 中已经有节点，则先卸载该节点
+        unmount(container._vnode, null, null, true)
+      }
     } else {
       // 初次挂载 或 更新挂载
       patch(

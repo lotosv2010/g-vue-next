@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>unmount</title>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // import { render, h } from "../../node_modules/vue/dist/vue.esm-browser.js";
+    import { render, h } from "../../packages/runtime-dom/dist/runtime-dom.esm.js";
+
+    const app = document.querySelector('#app');
+
+    render(h("div", "hello world"), app);
+
+    setTimeout(() => {
+      render(null, app);
+      // render(h('p', 'bye'), app); // 两个节点类型不相同，此时无法进行树比对，直接卸载节点，再插入新的根节点
+    }, 1000)
+  </script>
+</body>
+
+</html>
