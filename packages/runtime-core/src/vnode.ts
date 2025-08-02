@@ -1,6 +1,6 @@
 import { type Ref } from "@g-vue-next/reactivity";
 import type { RendererElement, RendererNode } from "./renderer";
-import { isArray, isString, ShapeFlags } from "@g-vue-next/shared";
+import { isArray, isObject, isString, ShapeFlags } from "@g-vue-next/shared";
 
 export type VNodeRef = 
   | string
@@ -29,7 +29,7 @@ export type VNodeChildAtom =
 
 export type VNodeArrayChildren = Array<VNodeArrayChildren | VNodeChildAtom>
 
-export type VNodeChildren = VNodeChildAtom | VNodeArrayChildren
+export type VNodeChild = VNodeChildAtom | VNodeArrayChildren
 
 export type VNodeNormalizedChildren = 
   | string
@@ -99,6 +99,10 @@ function _createVNode(
   return createBaseVNode(type, props, children)
 }
 
+export const Text = Symbol.for('v-text')
+export const Comment = Symbol.for('v-cmt')
+export const Fragment = Symbol.for('v-fgt')
+
 // 判断两个节点是否相同
 export function isSameVNodeType(n1: VNode, n2: VNode): boolean {
   return n1.type === n2.type && n1.key === n2.key
@@ -106,6 +110,23 @@ export function isSameVNodeType(n1: VNode, n2: VNode): boolean {
 
 export const isVNode = (value: any): value is VNode => {
   return value ? value.__v_isVNode === true : false
+}
+
+export const normalizeVNode = (child: VNodeChild): VNode => {
+  // child 是 false 或 null, 返回一个空节点
+  if (child == null || typeof child === 'boolean') { 
+    return createVNode(Comment)
+  } else if (isArray(child)) {
+    return createVNode(
+      Fragment as any,
+      null,
+      child.slice()
+    )
+  } else if (isObject(child)) {
+    return child as VNode
+  } else {
+    return createVNode(Text, null, String(child))
+  }
 }
 
 export const createVNode = _createVNode

@@ -17,3 +17,5 @@ export const isOn = (key: string) =>
   (key.charCodeAt(2) > 122 || key.charCodeAt(2) < 97) // [a-z]
 // 判断是否为字符串
 export const isString = (val: unknown): val is string => typeof val === 'string'
+// 判断是否为null或者undefined
+export const isNil = (val: unknown): val is null | undefined => val == null

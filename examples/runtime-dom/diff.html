@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>diff</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // import { render, h, } from  "../../node_modules/vue/dist/vue.esm-browser.js";
+      import { render, h, } from "../../packages/runtime-dom/dist/runtime-dom.esm.js";
+      // 两个参数:
+      // render(h("div", "hello world"), document.getElementById("app"));
+      // render(h("div", { class: "main" }), document.getElementById("app"));
+      // render(h('div', [h('p', 'hello world'), h('p', 'hahha')]), document.getElementById("app"))
+      // 三个参数:
+      // render(h("div", {class: "main"}, "hello world"), document.getElementById("app"));
+      // render(h("div", { class: "main", style: {color: "red"} }, [h("p", "hello world"), h("p", "hahha")]), document.getElementById("app"));
+      // 大于三个参数:
+      // render(h("div", {class: "main"}, '123', 1,  h("p", "hello world"), h("p", "hahha")), document.getElementById("app"));
+    
+      // TODO : 测试卸载
+      // setTimeout(() => {
+      //   render(null, document.getElementById("app")) 
+      // }, 1000);
+
+      // TODO : 测试更新
+      // 1. 新的 children 是文本, 旧的 children 是数组 -> 删除旧的 children, 创建新的 children
+      // 2. 新的 children 是文本, 旧的 children 是文本 -> 更新文本即可
+      // 3. 新的 children 是文本, 旧的 children 是空 -> 更新文本即可(类似上述情况)
+      // render(h('div', {style: {color: "red"}}, [h('p', 'hello world'), h('p', 'hahha')]), document.getElementById("app"))
+      // 4. 新的 children 是数组, 旧的 children 是数组 -> 比对数组(diff 算法)
+      // render(h('div', {style: {color: "red"}}, [h('p', 'hello world'), h('p', 'hahha')]), document.getElementById("app"))
+      // 5. 新的 children 是数组, 旧的 children 是文本 -> 清空文本, 创建新的 children
+      // render(h('div', {style: {color: "red"}}, 'hello Vue3'), document.getElementById("app"))
+      // 6. 新的 children 是数组, 旧的 children 是空 -> 创建新的 children(类似上述情况)
+      // render(h('div', {style: {color: "red"}}, null), document.getElementById("app"))
+      // 7. 新的 children 是空, 旧的 children 是数组 -> 删除旧的 children
+      // render(h('div', {style: {color: "red"}}, [h('p', 'hello world'), h('p', 'hahha')]), document.getElementById("app"))
+      // 8. 新的 children 是空, 旧的 children 是文本 -> 删除旧的 children
+      // render(h('div', {style: {color: "red"}}, 'hello Vue3'), document.getElementById("app"))
+      // 9. 新的 children 是空, 旧的 children 是空 -> 什么都不做
+      // render(h('div', {style: {color: "red"}}, null), document.getElementById("app"))
+
+      // setTimeout(() => {
+      //   // 情况 1、2、3
+      //   // render(h('div', {style: {color: "green"}}, 'hello Vue3'), document.getElementById("app"))
+      //   // render(null, document.getElementById("app"))
+      //   // 情况 4
+      //   // render(h('div', {style: {color: "green"}}, [h('span', 'hello vue3'), h('span', 'hehe')]), document.getElementById("app"))
+      //   // 情况 5, 6
+      //   // render(h('div', {style: {color: "green"}}, [h('p', 'hello world'), h('p', 'hahaha')]), document.getElementById("app"))
+      //   // 情况 7, 8, 9
+      //   // render(h('div', {style: {color: "green"}}, null), document.getElementById("app"))
+      // }, 1000);
+
+      // TODO : 测试diff
+      // TODO 1.sync from start ==> 左侧对比
+      // render(h('ul', {style: {color: "red"}}, [
+      //   h('li', {key: 'a'}, 'a'),
+      //   h('li', {key: 'b'}, 'b'),
+      //   h('li', {key: 'c'}, 'c'),
+      // ]), document.getElementById("app"))
+
+      // setTimeout(() => {
+      //   render(h('ul', {style: {color: "green"}}, [
+      //     h('li', {key: 'a'}, 'a'),
+      //     h('li', {key: 'b'}, 'b'),
+      //     h('li', {key: 'e'}, 'e'),
+      //     h('li', {key: 'd'}, 'd'),
+      //   ]), document.getElementById("app"))
+      // }, 1000);
+
+      // TODO 2.sync from end   ==> 右侧对比
+      // render(h('ul', {style: {color: "red"}}, [
+      //   h('li', {key: 'a'}, 'a'),
+      //   h('li', {key: 'b'}, 'b'),
+      //   h('li', {key: 'c'}, 'c'),
+      // ]), document.getElementById("app"))
+
+      // setTimeout(() => {
+      //   render(h('ul', {style: {color: "green"}}, [
+      //     h('li', {key: 'd'}, 'd'),
+      //     h('li', {key: 'e'}, 'e'),
+      //     h('li', {key: 'b'}, 'b'),
+      //     h('li', {key: 'c'}, 'c'),
+      //   ]), document.getElementById("app"))
+      // }, 1000);
+
+      // TODO 3.common sequence + mount  ==> 同序列挂载（新增）
+      // render(h('ul', {style: {color: "red"}}, [
+      //   h('li', {key: 'a'}, 'a'),
+      //   h('li', {key: 'b'}, 'b'),
+      // ]), document.getElementById("app"))
+
+      // setTimeout(() => {
+      //   render(h('ul', {style: {color: "green"}}, [
+      //     h('li', {key: 'a'}, 'a'),
+      //     h('li', {key: 'b'}, 'b'),
+      //     h('li', {key: 'c'}, 'c'),
+      //   ]), document.getElementById("app"))
+      // }, 1000);
+
+      // render(h('ul', {style: {color: "red"}}, [
+      //   h('li', {key: 'a'}, 'a'),
+      //   h('li', {key: 'b'}, 'b'),
+      // ]), document.getElementById("app"))
+
+      // setTimeout(() => {
+      //   render(h('ul', {style: {color: "green"}}, [
+      //     h('li', {key: 'c'}, 'c'),
+      //     h('li', {key: 'a'}, 'a'),
+      //     h('li', {key: 'b'}, 'b'),
+      //   ]), document.getElementById("app"))
+      // }, 1000);
+
+      // TODO 4.common sequence + unmount ==> 同序列卸载（删除）
+      // render(h('ul', {style: {color: "red"}}, [
+      //   h('li', {key: 'a'}, 'a'),
+      //   h('li', {key: 'b'}, 'b'),
+      //   h('li', {key: 'c'}, 'c'),
+      // ]), document.getElementById("app"))
+
+      // setTimeout(() => {
+      //   render(h('ul', {style: {color: "green"}}, [
+      //     h('li', {key: 'a'}, 'a'),
+      //     h('li', {key: 'b'}, 'b'),
+      //   ]), document.getElementById("app"))
+      // }, 1000);
+
+      // render(h('ul', {style: {color: "red"}}, [
+      //   h('li', {key: 'a'}, 'a'),
+      //   h('li', {key: 'b'}, 'b'),
+      //   h('li', {key: 'c'}, 'c'),
+      // ]), document.getElementById("app"))
+
+      // setTimeout(() => {
+      //   render(h('ul', {style: {color: "green"}}, [
+      //     h('li', {key: 'b'}, 'b'),
+      //     h('li', {key: 'c'}, 'c'),
+      //   ]), document.getElementById("app"))
+      // }, 1000);
+
+      // TODO 5.unknown sequence ==> 乱序比对
+      render(h('ul', {style: {color: "red"}}, [
+        h('li', {key: 'a', style: { background: "yellow" }}, 'a'),
+        h('li', {key: 'b'}, 'b'),
+        // h('li', {key: 'q'}, 'q'),
+        h('li', {key: 'c'}, 'c'),
+        h('li', {key: 'd'}, 'd'),
+        h('li', {key: 'e'}, 'e'),
+        h('li', {key: 'f'}, 'f'),
+        h('li', {key: 'g'}, 'g'),
+      ]), document.getElementById("app"))
+
+      setTimeout(() => {
+        render(h('ul', {style: {color: "green"}}, [
+          h('li', {key: 'a'}, 'a'),
+          h('li', {key: 'b'}, 'b'),
+          h('li', {key: 'e'}, 'e'),
+          h('li', {key: 'c', style: { color: "red" }}, 'c'),
+          h('li', {key: 'd'}, 'd'),
+          h('li', {key: 'h'}, 'h'),
+          h('li', {key: 'f'}, 'f'),
+          h('li', {key: 'g'}, 'g'),
+        ]), document.getElementById("app"))
+      }, 1000);
+    </script>
+  </body>
+</html>
