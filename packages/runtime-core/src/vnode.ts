@@ -17,6 +17,7 @@ export type VNodeTypes =
   | VNode
   | typeof Text
   | typeof Comment
+  | typeof Fragment
 
 export type VNodeChildAtom = 
   | VNode
@@ -50,6 +51,7 @@ export interface VNode<
   children: VNodeNormalizedChildren
   // DOM
   el: HostNode | null
+  anchor: HostNode | null
   
   // optimization
   shapeFlag: number

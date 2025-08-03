@@ -1,5 +1,5 @@
 import { isNil, NOOP, ShapeFlags } from "@g-vue-next/shared";
-import { Comment, isSameVNodeType, normalizeVNode, Text, type VNode, type VNodeArrayChildren } from "./vnode";
+import { Comment, Fragment, isSameVNodeType, normalizeVNode, Text, type VNode, type VNodeArrayChildren } from "./vnode";
 
 export interface Renderer<HostElement = RendererElement> {
   render: RootRenderFunction<HostElement>
@@ -92,6 +92,7 @@ type MoveFn = (
   type: MoveType,
   parentSuspense?: any | null
 ) => void
+type RemoveFn = (vnode: VNode) => void
 
 export function createRenderer<
   HostNode = RendererNode,
@@ -155,6 +156,10 @@ function baseCreateRenderer<
       case Comment:
         processCommentNode(n1, n2, container, anchor)
         break
+      // 片段节点：主要作用是把多个节点包裹在一起，方便后续处理
+      case Fragment:
+        processFragment(n1, n2, container, anchor, parentComponent, parentSuspense, namespace)
+        break
       // 元素节点或组件
       default:
         if(shapeFlag & ShapeFlags.ELEMENT) { // 元素节点
@@ -215,6 +220,48 @@ function baseCreateRenderer<
     }
   }
 
+  // 处理 Fragment
+  const processFragment = (
+    n1: VNode | null,
+    n2: VNode,
+    container: RendererElement,
+    anchor: RendererNode | null,
+    parentComponent: any | null,
+    parentSuspense: any | null,
+    namespace: ElementNamespace
+  ) => {
+    // 双锚点系统：标记Fragment的边界
+    const fragmentStartAnchor: any = (n2.el = n1 ? n1.el : hostCreateText('')) // Fragment开始位置的文本节点锚点
+    const fragmentEndAnchor: any = (n2.anchor = n1 ? n1.anchor : hostCreateText('')) // Fragment结束位置的文本节点锚点
+
+    // 首次挂载：创建Fragment结构
+    if (n1 == null) {
+      // 插入开始锚点
+      hostInsert(fragmentStartAnchor, container as any, anchor as any)
+      hostInsert(fragmentEndAnchor, container as any, anchor as any)
+
+      // 挂载子节点
+      mountChildren(
+        n2.children as VNodeArrayChildren,
+        container,
+        fragmentEndAnchor, // 使用结束锚点作为插入参考
+        parentComponent,
+        parentSuspense,
+        namespace
+      )
+    } else {
+      // 更新操作
+      patchChildren(
+        n1,
+        n2,
+        container,
+        fragmentEndAnchor,
+        parentComponent,
+        parentSuspense,
+        namespace
+      )
+    }
+  }
   // 移动节点
   const move: MoveFn = (
     vnode,
@@ -572,7 +619,7 @@ function baseCreateRenderer<
     doRemove = false,
     optimize = false
   ) => {
-    hostRemove(vnode.el as any)
+    remove(vnode)
   }
   const unmountChildren: UnmountChildrenFn = (
     children,
@@ -584,6 +631,33 @@ function baseCreateRenderer<
     }
   }
 
+  const remove: RemoveFn = (vnode) => {
+    const { el, type, anchor } = vnode
+    if (type === Fragment) {
+      removeFragment(el, anchor)
+      return
+    }
+    const performRemove = () => {
+      hostRemove(el as HostNode)
+    }
+    if (vnode.shapeFlag & ShapeFlags.ELEMENT) {
+      performRemove()
+    } else {
+      performRemove()
+    }
+  }
+
+  const removeFragment = (cur: RendererNode, end: RendererNode) => {
+    let next
+    while (cur !== end) {
+      next = hostNextSibling(cur as HostNode)
+      hostRemove(cur as HostNode)
+      cur = next
+    }
+    hostRemove(end as HostNode)
+  }
+
+  /*************** render ***************/
   const render = (vnode, container, namespace) => {
     // 三种情况：
     // 1. 初始渲染

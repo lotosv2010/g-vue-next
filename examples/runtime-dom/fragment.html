@@ -3,21 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Comment</title>
+    <title>fragment</title>
   </head>
   <body>
     <div id="app"></div>
     <script type="module">
-      // import { render, h, Text, Comment } from "../../node_modules/vue/dist/vue.esm-browser.js";
-      import { render, h, Text, Comment } from "../../packages/runtime-dom/dist/runtime-dom.esm.js";
+      // import { render, h, Text, Fragment } from "../../node_modules/vue/dist/vue.esm-browser.js";
+      import { render, h, Text, Fragment } from "../../packages/runtime-dom/dist/runtime-dom.esm.js";
 
       const app = document.getElementById('app');
       // 首次渲染
-      render(h(Text, 'one'), app)
+      render(h(Fragment, [h(Text, 'hello world'), h('p', 'two')]), app)
 
       // 更新
       setTimeout(() => {
-        render(h(Comment), app)
+        render(h(Fragment, [h(Text, 'hello world'), h('p', '你好'), h(Text, 'vue3'), h('div', 'world')]), app)
       }, 1000);
 
       // 卸载
