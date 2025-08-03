@@ -1,5 +1,5 @@
 import { isNil, NOOP, ShapeFlags } from "@g-vue-next/shared";
-import { isSameVNodeType, normalizeVNode, Text, type VNode, type VNodeArrayChildren } from "./vnode";
+import { Comment, isSameVNodeType, normalizeVNode, Text, type VNode, type VNodeArrayChildren } from "./vnode";
 
 export interface Renderer<HostElement = RendererElement> {
   render: RootRenderFunction<HostElement>
@@ -146,9 +146,14 @@ function baseCreateRenderer<
     const { type, shapeFlag} = n2
     //! ⚠️ 每增加一种类型都需要考虑首次渲染、更新、卸载 三种情况
     switch (type) {
-      // 文本节点
+      // 文本节点：最简单的节点类型，只包含纯文本内容
       case Text:
         processText(n1, n2, container, anchor)
+        break
+      //  注释节点：主要用作条件渲染的占位符
+      // 典型场景：v-if="false" 时创建注释节点保持DOM结构稳定
+      case Comment:
+        processCommentNode(n1, n2, container, anchor)
         break
       // 元素节点或组件
       default:
@@ -194,6 +199,19 @@ function baseCreateRenderer<
         // 文本内容改变，更新内容
         hostSetText(el, n2.children)
       }
+    }
+  }
+
+  // 处理注释节点
+  const processCommentNode = (n1, n2, container, anchor) => {
+    if (n1 === null) {
+      hostInsert(
+        (n2.el = hostCreateComment(n2.children || '')),
+        container,
+        anchor
+      )
+    } else {
+      n2.el = n1.el
     }
   }
 
