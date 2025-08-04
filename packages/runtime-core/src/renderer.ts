@@ -1,5 +1,10 @@
 import { isNil, NOOP, ShapeFlags } from "@g-vue-next/shared";
-import { Comment, Fragment, isSameVNodeType, normalizeVNode, Text, type VNode, type VNodeArrayChildren } from "./vnode";
+import { Comment, Fragment, isSameVNodeType, mergeProps, normalizeVNode, Text, type VNode, type VNodeArrayChildren } from "./vnode";
+import { ComponentInternalInstance, createComponentInstance, setupComponent } from "./component";
+import { reactive, ReactiveEffect } from "@g-vue-next/reactivity";
+import { queueJob } from "./scheduler";
+import { updateProps } from "./componentProps";
+import { shouldUpdateComponent } from "./componentRenderUtils";
 
 export interface Renderer<HostElement = RendererElement> {
   render: RootRenderFunction<HostElement>
@@ -93,6 +98,22 @@ type MoveFn = (
   parentSuspense?: any | null
 ) => void
 type RemoveFn = (vnode: VNode) => void
+export type MountComponentFn = (
+  initialVNode: VNode,
+  container: RendererElement,
+  anchor: RendererNode | null,
+  parentComponent: any | null,
+  parentSuspense: any | null,
+  namespace: ElementNamespace
+) => void
+export type SetupRenderEffectFn = (
+  instance: ComponentInternalInstance,
+  initialVNode: VNode,
+  container: RendererElement,
+  anchor: RendererNode | null,
+  parentSuspense: any | null,
+  namespace: ElementNamespace
+) => void
 
 export function createRenderer<
   HostNode = RendererNode,
@@ -164,6 +185,8 @@ function baseCreateRenderer<
       default:
         if(shapeFlag & ShapeFlags.ELEMENT) { // 元素节点
           processElement(n1, n2, container, anchor, parentComponent, parentSuspense, namespace)
+        } else if(shapeFlag & ShapeFlags.COMPONENT) { // 组件
+          processComponent(n1, n2, container, anchor, parentComponent, parentSuspense, namespace)
         }
         break
     }
@@ -262,6 +285,7 @@ function baseCreateRenderer<
       )
     }
   }
+
   // 移动节点
   const move: MoveFn = (
     vnode,
@@ -272,6 +296,30 @@ function baseCreateRenderer<
   ) => {
     const { el } = vnode
     hostInsert(el as any, container as any, anchor as any)
+  }
+
+  const processComponent = (
+    n1: VNode | null,
+    n2: VNode,
+    container: RendererElement,
+    anchor: RendererNode | null,
+    parentComponent: any | null,
+    parentSuspense: any | null,
+    namespace: ElementNamespace
+  ) => { 
+    // 首次挂载
+    if (n1 === null) {
+      mountComponent(
+        n2,
+        container,
+        anchor,
+        parentComponent,
+        parentSuspense,
+        namespace
+      )
+    } else { // 更新
+      updateComponent(n1, n2)
+    }
   }
   /*************** 挂载 ***************/
   // 挂载元素节点
@@ -318,6 +366,82 @@ function baseCreateRenderer<
       const child = normalizeVNode(children[i])
       patch(null, child, container, anchor, parentComponent, parentSuspense, namespace)
     }
+  }
+  // 挂载组件
+  const mountComponent: MountComponentFn = (
+    initialVNode,
+    container,
+    anchor,
+    parentComponent,
+    parentSuspense,
+    namespace
+  ) => {
+    // vnode 指向组件的虚拟节点
+    // subtree 指向组件的 render 函数返回的虚拟节点
+    //! 核心逻辑三部曲
+    // 1.创建组件实例
+    const instance = (initialVNode.component = createComponentInstance(initialVNode, parentComponent, parentSuspense))
+    // 2.初始化组件实例，给组件实例添加 props, data, proxy, render 等属性
+    setupComponent(instance)
+    // 3.创建组件实例的 effect 函数，并执行
+    setupRenderEffect(
+      instance,
+      initialVNode,
+      container,
+      anchor,
+      parentSuspense,
+      namespace
+    )
+  }
+
+  // 组件实例的 effect 函数
+  const setupRenderEffect:SetupRenderEffectFn = (
+    instance,
+    initialVNode,
+    container,
+    anchor,
+    parentSuspense,
+    namespace
+  ) => {
+    const componentUpdateFn = () => {
+      const { render } = instance
+      if (!instance.isMounted) {
+        // subtree 为第一次渲染产生的vnode，这里的作用是缓存子树, 用于后续的更新
+        const subTree = (instance.subTree = render.call(instance.proxy, instance.proxy))
+        //! 合并组件的props和attrs，这里比较暴力，源码中逻辑比较复杂 
+        subTree.props = mergeProps(instance.attrs, subTree.props)
+        // 挂载组件
+        patch(null, subTree, container, anchor, null, parentSuspense, namespace)
+        // 缓存组件的el
+        initialVNode.el = subTree.el
+        // 标记组件已挂载
+        instance.isMounted = true
+      } else {
+        // 如果有 next 说明需要更新属性和插槽
+        if (instance.next) {
+          updateComponentPreRender(instance, instance.next)
+        }
+        // 获取组件的虚拟DOM
+        const nextTree = render.call(instance.proxy, instance.proxy)
+        // 获取更新前的组件的虚拟DOM
+        const prevTree = instance.subTree
+        // 合并组件的props
+        nextTree.props = mergeProps(instance.attrs, nextTree.props)
+        // 更新组件的虚拟DOM
+        instance.subTree = nextTree
+        // 更新组件
+        patch(prevTree, nextTree, hostParentNode(prevTree.el as any), anchor, null, parentSuspense, namespace)
+      }
+    }
+
+    // 创建副作用函数
+    const effect = new ReactiveEffect(componentUpdateFn, () => {
+      // 异步更新，防止频繁更新
+      // instance.update()
+      queueJob(update)
+    })
+    const update = instance.update = effect.run.bind(effect)
+    update() // 执行副作用函数
   }
   /*************** 更新 ***************/
   const patchProps = (
@@ -609,6 +733,35 @@ function baseCreateRenderer<
 
     // 比较子节点差异
     patchChildren(n1, n2, el, null, parentComponent, parentSuspense, namespace)
+  }
+  const updateComponent = (n1: VNode, n2: VNode) => {
+    //! 组件的更新逻辑: 组件更新的方式有三种（状态[data]、属性[props]、插槽[slot]）
+    // 获取组件实例，这里是复用组件
+    const instance = (n2.component = n1?.component)
+    // 更新组件的虚拟DOM 
+    if (shouldUpdateComponent(n1, n2)) {
+      // updateComponentPreRender(instance, n2)
+      instance.next = n2 // 有next 说明是属性或插槽更新，否则为状态更新
+      instance.update()
+    } else {
+      n2.el = n1.el
+      instance.vnode = n2
+    }
+  }
+
+  const updateComponentPreRender = (
+    instance: ComponentInternalInstance,
+    nextVNode: VNode
+  ) => {
+    // 将组件实例赋给新的虚拟DOM 的 component 属性上
+    nextVNode.component = instance
+    // 获取组件实例的props
+    const prevProps = instance.vnode.props
+    // 更新组件实例上的虚拟DOM
+    instance.vnode = nextVNode
+    instance.next = null
+    // 1. 更新 props
+    updateProps(instance, nextVNode.props, prevProps)
   }
   /*************** 卸载 ***************/
   // 卸载节点

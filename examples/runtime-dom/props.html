@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>component</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // import { render, h, Text, Fragment } from "../../node_modules/vue/dist/vue.esm-browser.js"
+      import { render, h, Text, Fragment } from "../../packages/runtime-dom/dist/runtime-dom.esm.js";
+
+      // props 用户自定义组件属性，attrs 是原生属性
+      // 组件没有定义 props 的时候，attrs 会是用户传递的所有属性
+      // 组件定义了 props，attrs 就是用户传递的除了 props 以外的属性
+      const ChildComponent = {
+        props: {
+          msg: String
+        },
+        data() {
+          return {
+            pre: '#'
+          }
+        },
+        render(proxy) {
+          console.log(proxy.msg)
+          setTimeout(() => {
+            this.pre = '##'
+          }, 2000);
+          return h(Text, this.pre + this.msg)
+        }
+      }
+
+      const component = {
+        props: {
+          foo: String
+        },
+        data() {
+          return {
+            name: "hello world",
+            age: 18,
+            isShow: true
+          }
+        },
+        render(proxy) {
+          console.log(proxy)
+          console.log(this?.$props, this?.$attrs) // { foo: 'foo' } { bar: 'bar' }
+          // 更新逻辑不能写在render函数内
+          return h('div', [
+            h(Text, this.name),
+            h('p', this.foo),
+            h('button', {
+              onClick: () => {
+                this.isShow = !this.isShow
+              }
+            }, [h(Text, `点我修改状态【${!this.isShow? '去显示': '去隐藏'}】`)]),
+            h(ChildComponent, { msg: this.isShow ? '显示' : '隐藏' }),
+          ])
+        }
+      }
+
+      render(h(component, { foo:'foo', bar: 'bar', style: { color: "red" }}), document.getElementById("app"))
+    </script>
+  </body>
+</html>

@@ -1,7 +1,9 @@
 import { type Ref } from "@g-vue-next/reactivity";
 import type { RendererElement, RendererNode } from "./renderer";
-import { isArray, isObject, isString, ShapeFlags } from "@g-vue-next/shared";
+import { isArray, isObject, isOn, isString, normalizeClass, normalizeStyle, ShapeFlags } from "@g-vue-next/shared";
+import { Component, ComponentInternalInstance } from "./component";
 
+export type Data = Record<string, unknown>;
 export type VNodeRef = 
   | string
   | Ref
@@ -14,6 +16,7 @@ export type VNodeProps = {
 
 export type VNodeTypes = 
   | string
+  | Component
   | VNode
   | typeof Text
   | typeof Comment
@@ -49,6 +52,7 @@ export interface VNode<
   props: (VNodeProps & ExtraProps) | null
 
   children: VNodeNormalizedChildren
+  component: ComponentInternalInstance | null
   // DOM
   el: HostNode | null
   anchor: HostNode | null
@@ -63,15 +67,15 @@ const normalizeKey = ({ key }: VNodeProps): VNodeProps['key'] =>
 function createBaseVNode(
   type: VNodeTypes,
   props: (VNodeProps | Record<string, unknown>) | null = null,
-  children: unknown = null
+  children: unknown = null,
+  shapeFlag: number = type === Fragment ? 0 : ShapeFlags.ELEMENT
 ) {
-  const shapeFlag = isString(type) ? ShapeFlags.ELEMENT : 0 // 是否是元素节点
-
   const vnode = {
     __v_isVNode: true,
     type, // 类型
     props, // 属性
     children, // 子节点
+    component: null, // 组件实例
     shapeFlag, // 元素节点的标识
     el: null, // 虚拟节点对应的真实元素节点
     key: props && normalizeKey(props), // 虚拟节点的key
@@ -98,7 +102,12 @@ function _createVNode(
   props: (VNodeProps | Record<string, unknown>) | null = null,
   children: unknown = null
 ): VNode {
-  return createBaseVNode(type, props, children)
+  const shapeFlag = isString(type) // 元素节点
+    ? ShapeFlags.ELEMENT
+    : isObject(type) // 组件节点
+    ? ShapeFlags.STATEFUL_COMPONENT
+    : 0
+  return createBaseVNode(type, props, children, shapeFlag)
 }
 
 export const Text = Symbol.for('v-text')
@@ -129,6 +138,37 @@ export const normalizeVNode = (child: VNodeChild): VNode => {
   } else {
     return createVNode(Text, null, String(child))
   }
+}
+
+export function mergeProps(...args: (Data & VNodeProps)[]) {
+  const ret: Data = {}
+  for (let i = 0; i < args.length; i++) {
+    const toMerge = args[i]
+    for (const key in toMerge) {
+      if (key === 'class') {
+        if (ret.class !== toMerge.class) {
+          ret.class = normalizeClass([ret.class, toMerge.class])
+        }
+      } else if (key === 'style') {
+        ret.style = normalizeStyle([ret.style, toMerge.style])
+      } else if (isOn(key)) {
+        const existing = ret[key]
+        const incoming = toMerge[key]
+        if (
+          incoming &&
+          existing !== incoming &&
+          !(isArray(existing) && existing.includes(incoming))
+        ) {
+          ret[key] = existing
+            ? [].concat(existing as any, incoming as any)
+            : incoming
+        }
+      } else if (key !== '') {
+        ret[key] = toMerge[key]
+      }
+    }
+  }
+  return ret
 }
 
 export const createVNode = _createVNode

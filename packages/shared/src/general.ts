@@ -19,3 +19,19 @@ export const isOn = (key: string) =>
 export const isString = (val: unknown): val is string => typeof val === 'string'
 // 判断是否为null或者undefined
 export const isNil = (val: unknown): val is null | undefined => val == null
+// 创建一个空对象
+export const EMPTY_OBJ = {}
+// 获取对象的属性
+export const ownProperty = Object.prototype.hasOwnProperty
+// 判断对象中是否有某个属性
+export const hasOwn = (val: object, key: string) =>
+  ownProperty.call(val, key)
+// 驼峰命名 
+const camelizeRE = /-(\w)/g
+export const camelize = (str: string): string => {
+  return str.replace(camelizeRE, (_, c) => (c ? c.toUpperCase() : ''))
+}
+// 横线命名
+const hyphenateRE = /\B([A-Z])/g
+export const hyphenate = (str: string) =>
+  str.replace(hyphenateRE, '-$1').toLowerCase()
