@@ -61,7 +61,7 @@ export type MountChildrenFn = (
   parentSuspense: any | null,
   namespace: ElementNamespace
 ) => void
-export type Data = {
+type Data = {
   [key: string]: unknown;
 }
 export enum MoveType {

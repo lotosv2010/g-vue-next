@@ -3,7 +3,7 @@ import type { RendererElement, RendererNode } from "./renderer";
 import { isArray, isObject, isOn, isString, normalizeClass, normalizeStyle, ShapeFlags } from "@g-vue-next/shared";
 import { Component, ComponentInternalInstance } from "./component";
 
-export type Data = Record<string, unknown>;
+type Data = Record<string, unknown>;
 export type VNodeRef = 
   | string
   | Ref

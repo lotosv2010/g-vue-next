@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>setup</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // import { ref, render, h, reactive, toRefs, getCurrentInstance } from '../../node_modules/vue/dist/vue.esm-browser.js'
+    import { ref, render, h, reactive, toRefs, getCurrentInstance} from '../../packages/vue/dist/vue.esm.js'
+
+    const App = {
+      setup(props, ctx) {
+        // ctx : attrs, slots, emit, expose
+        // props: 是组件传递的属性
+        // slots: 组件的插槽, h函数中第三个参数可以传入插槽，此时插槽必须是一个对象，如 {default: () => h('div', 'slot')}
+        // emit: 触发事件
+        // expose: 暴露属性
+        console.log('setup', props, ctx)
+        const name = ref('test')
+        const age = ref(18)
+        const state = reactive({ w: 70, h: 170 })
+
+        ctx.expose({
+          fullname: name
+        }) 
+
+        const instance = getCurrentInstance()
+        console.log('instance.exposed', instance, instance.exposed)
+
+        const handleClick = () => {
+          ctx.emit('my-click')
+        }
+
+        setTimeout(() => {
+          age.value = 99
+        }, 1000);
+
+        // 当返回一个函数时，会作为render函数，优先级高于render函数
+        // return () => {
+        //   return h('div', {}, [
+        //     h('p', {}, `name: ${name.value}`),
+        //     h('p', {}, `age: ${age.value}`),
+        //     h('p', {}, `w: ${state.w}`),
+        //     h('p', {}, `h: ${state.h}`),
+        //     h('button', {onClick: handleClick}, '按钮')
+        //   ])
+        // }
+
+        // 当返回一个对象时，会作为setup函数的返回值，此时this指向setup函数的返回值
+        return {
+          ...toRefs(state),
+          name,
+          age,
+          handleClick
+        }
+      },
+      // render() {
+      //   // 这里的 this 指向的是 setup 函数的返回值
+      //   console.log(this, arguments)
+      //   return h('div', {}, [
+      //     h('p', {}, `render name: ${this.name}`),
+      //     h('p', {}, `render age: ${this.age}`),
+      //     h('p', {}, `render w: ${this.w}`),
+      //     h('p', {}, `render h: ${this.h}`),
+      //     h('button', {onClick: this.handleClick}, '按钮')
+      //   ])
+      // },
+      render(proxy) {
+        return h('div', {}, [
+          h('p', {}, `render name: ${proxy.name}`),
+          h('p', {}, `render age: ${proxy.age}`),
+          h('p', {}, `render w: ${proxy.w}`),
+          h('p', {}, `render h: ${proxy.h}`),
+          h('button', {onClick: proxy.handleClick}, '按钮')
+        ])
+      }
+    }
+
+    render(
+      h(App, 
+        { 
+          foo: 'foo', 
+          style: { color: 'red' }, 
+          onMyClick: () => console.log('click me')
+        }, 
+        {
+          default: () => h('div', 'slot')
+        }
+      ), document.querySelector('#app'))
+  </script>
+</body>
+</html>

@@ -33,11 +33,13 @@ export const publicPropertiesMap = extend(Object.create(null), {
 // 创建组件实例的代理对象
 export const PublicInstanceProxyHandlers = {
   get({ _: instance}: ComponentRenderContext, key, receiver) {
-    const { data, props } = instance
+    const { data, props, setupState } = instance
     if (data && hasOwn(data, key)) {
       return data[key]
     } else if (props && hasOwn(props, key)) {
       return props[key]
+    } else if (setupState && hasOwn(setupState, key)) {
+      return setupState[key]
     }
     // 获取以 $ 开头的属性
     const publicGetter = publicPropertiesMap[key]
@@ -46,12 +48,14 @@ export const PublicInstanceProxyHandlers = {
     }
   },
   set({ _: instance }: ComponentRenderContext, key, value, receiver) {
-    const { data, props } = instance
+    const { data, props, setupState } = instance
     if (data && hasOwn(data, key)) {
       data[key] = value
     } else if (props && hasOwn(props, key)) {
       console.warn(`Attempting to mutate prop "${key}". Props are readonly.`)
       return false
+    } else if (setupState && hasOwn(setupState, key)) {
+      setupState[key] = value
     }
     return true
   }
