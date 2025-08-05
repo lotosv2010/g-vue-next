@@ -35,3 +35,11 @@ export const camelize = (str: string): string => {
 const hyphenateRE = /\B([A-Z])/g
 export const hyphenate = (str: string) =>
   str.replace(hyphenateRE, '-$1').toLowerCase()
+// 首字母大写
+export const capitalize = (str: string) =>
+  str.charAt(0).toUpperCase() + str.slice(1)
+// 获取事件名
+export const toHandlerKey = (str: string) => {
+  const s = str ? `on${capitalize(str)}` : ``
+  return s
+} 

@@ -1,9 +1,10 @@
-import { camelize, EMPTY_OBJ, isFunction, isObject } from "@g-vue-next/shared";
+import { EMPTY_OBJ, isFunction } from "@g-vue-next/shared";
 import { VNodeChild, type VNode } from "./vnode";
 import { proxyRefs, reactive } from "@g-vue-next/reactivity";
 import { PublicInstanceProxyHandlers } from "./componentPublicInstance";
 import { initProps } from "./componentProps";
 import { initSlots } from "./componentSlots";
+import { emit } from "./componentEmits";
 
 export type Data = Record<string, unknown>;
 
@@ -63,6 +64,7 @@ export interface ComponentInternalInstance {
   slots: InternalSlots
   // lifecycle hooks
   isMounted: boolean
+  isUnmounted: boolean
 }
 
 export type Component = 
@@ -95,9 +97,11 @@ export function createComponentInstance (
     slots: EMPTY_OBJ,
     setupState: EMPTY_OBJ,
     isMounted: false, // 组件是否已挂载
+    isUnmounted: false, // 组件是否已卸载
   }
   instance.ctx = {_: instance } // 创建组件实例的 ctx 属性
   instance.root = parent ? parent.root : instance // 创建组件实例的 root 属性
+  instance.emit = emit.bind(null, instance)
   return instance
 }
 // 设置组件的初始状态和行为
@@ -166,18 +170,10 @@ export function createSetupContext(instance: ComponentInternalInstance): SetupCo
     instance.exposed = exposed || {}
   }
 
-  const emit = (event, ...args) => {
-    // 判断event 是驼峰还是短横线分割的
-    const name = camelize(event)
-    const eventName = `on${name[0].toUpperCase()}${name.slice(1)}` // myClick ==> onMyClick
-    const handler = instance.vnode.props[eventName]
-    handler && handler(...args)
-  }
-
   return {
     attrs: instance.attrs,
     slots: instance.slots,
-    emit,
+    emit: instance.emit,
     expose,
   }
 }

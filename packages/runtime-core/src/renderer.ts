@@ -775,7 +775,13 @@ function baseCreateRenderer<
     doRemove = false,
     optimize = false
   ) => {
-    remove(vnode)
+    const { shapeFlag } = vnode
+    // 卸载组件
+    if (shapeFlag & ShapeFlags.COMPONENT) {
+      unmountComponent(vnode.component, parentSuspense, doRemove)
+    } else {
+      remove(vnode)
+    }
   }
   const unmountChildren: UnmountChildrenFn = (
     children,
@@ -786,6 +792,15 @@ function baseCreateRenderer<
       unmount(children[i], parentComponent, parentSuspense)
     }
   }
+
+  const unmountComponent = (
+    instance: ComponentInternalInstance,
+    parentSuspense: any | null,
+    doRemove?: boolean
+  ) => {
+    const { subTree } = instance
+    unmount(subTree, instance, parentSuspense, doRemove)
+  };
 
   const remove: RemoveFn = (vnode) => {
     const { el, type, anchor } = vnode

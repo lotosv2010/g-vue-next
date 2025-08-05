@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>emit</title>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // import { render, h } from "../../node_modules/vue/dist/vue.esm-browser.js"
+    import { render, h } from "../../packages/runtime-dom/dist/runtime-dom.esm.js";
+
+    const app = document.querySelector("#app")
+    const clickHandler = (age) => {
+      console.log("onMyClick", age)
+    }
+
+    const component = {
+      props: {
+        foo: String
+      },
+      data() {
+        return {
+          name: "hello world",
+          age: 18
+        }
+      },
+      setup(props, { emit }) {
+        return (proxy) => {
+          return h('div', [
+            h('p', proxy.name),
+            h('p', proxy.foo),
+            h('button', { onClick: () => emit('myClick', proxy.age) }, '点击')
+          ])
+        }
+      }
+    }
+
+    render(h(component, { onMyClick: clickHandler, foo: 'foo', bar: 'bar', style: { color: 'red' } }), app)
+
+  </script>
+</body>
+
+</html>
