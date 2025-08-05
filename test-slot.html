@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slot Test</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module">
+    import { ref, render, h, reactive, toRefs, getCurrentInstance} from './packages/vue/dist/vue.esm.js'
+
+    const app = document.querySelector('#app')
+
+    const App = {
+      setup(props, ctx) {
+        const name = ref('test')
+
+        setTimeout(() => {
+          name.value = 'test1'
+        }, 1000);
+
+        return {
+          name
+        }
+      },
+      render() {
+        return h('div', {}, [
+          this.$slots.header({title: 'vue3'}),
+          this.$slots.default(),
+          this.$slots.footer(),
+        ])
+      }
+    }
+
+    console.log('Initial render with red color')
+    render(h(App, { foo: 'foo', style: { color: 'red' }}, {
+      default: () => h('div', 'default '),
+      header: ({title}) => h('div', 'hello ' + title),
+      footer: () => h('div', 'footer')
+    }), app)
+
+    setTimeout(() => {
+      console.log('Update render with green color')
+      render(h(App, { bar: 'bar', style: { color: 'green' }}, {
+        default: () => h('div', 'new default'),
+        header: ({title}) => h('div', 'new hello ' + title),
+        footer: () => h('div', 'new footer')
+      }), app)
+    }, 2000);
+  </script>
+</body>
+</html> 

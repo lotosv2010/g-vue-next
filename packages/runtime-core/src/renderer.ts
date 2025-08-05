@@ -5,6 +5,7 @@ import { reactive, ReactiveEffect } from "@g-vue-next/reactivity";
 import { queueJob } from "./scheduler";
 import { updateProps } from "./componentProps";
 import { shouldUpdateComponent } from "./componentRenderUtils";
+import { updateSlots } from "./componentSlots";
 
 export interface Renderer<HostElement = RendererElement> {
   render: RootRenderFunction<HostElement>
@@ -408,7 +409,7 @@ function baseCreateRenderer<
       if (!instance.isMounted) {
         // subtree 为第一次渲染产生的vnode，这里的作用是缓存子树, 用于后续的更新
         const subTree = (instance.subTree = render.call(instance.proxy, instance.proxy))
-        //! 合并组件的props和attrs，这里比较暴力，源码中逻辑比较复杂 
+        // 合并组件的attrs到渲染结果中，attrs是未声明的props
         subTree.props = mergeProps(instance.attrs, subTree.props)
         // 挂载组件
         patch(null, subTree, container, anchor, null, parentSuspense, namespace)
@@ -425,7 +426,7 @@ function baseCreateRenderer<
         const nextTree = render.call(instance.proxy, instance.proxy)
         // 获取更新前的组件的虚拟DOM
         const prevTree = instance.subTree
-        // 合并组件的props
+        // 合并组件的props和attrs，保持与挂载时一致的逻辑
         nextTree.props = mergeProps(instance.attrs, nextTree.props)
         // 更新组件的虚拟DOM
         instance.subTree = nextTree
@@ -762,6 +763,8 @@ function baseCreateRenderer<
     instance.next = null
     // 1. 更新 props
     updateProps(instance, nextVNode.props, prevProps)
+    // 2. 更新 slots
+    updateSlots(instance, nextVNode.children)
   }
   /*************** 卸载 ***************/
   // 卸载节点

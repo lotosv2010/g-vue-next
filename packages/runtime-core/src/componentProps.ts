@@ -37,14 +37,31 @@ export function initProps(
 
 export function updateProps(instance: ComponentInternalInstance, rawProps: Data, rawPrevProps: Data) {
   if (hasPropsChanged(rawPrevProps, rawProps)) {
-    // 将 rawProps 中的属性赋值给 rawPrevProps
-    for (const key in rawProps) {
-      instance.props[key] = rawProps[key]
+    // 清空之前的 attrs
+    for (const key in instance.attrs) {
+      delete instance.attrs[key]
     }
+    
+    // 重新分类 props 和 attrs
+    for (const key in rawProps) {
+      const value = rawProps[key]
+      if (key in instance.propsOptions) {
+        // 更新 props
+        instance.props[key] = value
+      } else {
+        // 更新 attrs
+        instance.attrs[key] = value
+      }
+    }
+    
     // 删除 rawPrevProps 中不存在于 rawProps 的属性
     for (const key in rawPrevProps) {
       if (!(key in rawProps)) {
-        Reflect.deleteProperty(instance.props, key)
+        if (key in instance.propsOptions) {
+          Reflect.deleteProperty(instance.props, key)
+        } else {
+          delete instance.attrs[key]
+        }
       }
     }
   }

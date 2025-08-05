@@ -3,6 +3,7 @@ import { VNodeChild, type VNode } from "./vnode";
 import { proxyRefs, reactive } from "@g-vue-next/reactivity";
 import { PublicInstanceProxyHandlers } from "./componentPublicInstance";
 import { initProps } from "./componentProps";
+import { initSlots } from "./componentSlots";
 
 export type Data = Record<string, unknown>;
 
@@ -108,6 +109,8 @@ function setupStatefulComponent(instance: ComponentInternalInstance) {
   const { props, children } = instance.vnode
   // 初始化组件实例的props
   initProps(instance, props)
+  // 初始化组件实例的插槽
+  initSlots(instance, children)
   // 获取组件的构造函数
   const Component = instance.type
   // 创建组件实例的代理对象
@@ -121,7 +124,7 @@ function setupStatefulComponent(instance: ComponentInternalInstance) {
     // 设置当前组件实例
     setCurrentInstance(instance)
     // 执行setup函数，返回setup函数的返回值
-    const setupResult = setup(props, setupContext)
+    const setupResult = setup(instance.props, setupContext)
     // 重置当前组件实例
     setCurrentInstance(null)
     // 如果 setup 的返回值是函数，则将返回值作为组件的 render 函数

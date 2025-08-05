@@ -2,6 +2,7 @@ import { type Ref } from "@g-vue-next/reactivity";
 import type { RendererElement, RendererNode } from "./renderer";
 import { isArray, isObject, isOn, isString, normalizeClass, normalizeStyle, ShapeFlags } from "@g-vue-next/shared";
 import { Component, ComponentInternalInstance } from "./component";
+import { RawSlots } from "./componentSlots";
 
 type Data = Record<string, unknown>;
 export type VNodeRef = 
@@ -38,6 +39,7 @@ export type VNodeChild = VNodeChildAtom | VNodeArrayChildren
 export type VNodeNormalizedChildren = 
   | string
   | VNodeArrayChildren
+  | RawSlots
   | null
 
 export interface VNode<
@@ -87,6 +89,8 @@ function createBaseVNode(
     let type = 0
     if (isArray(children)) {
       type = ShapeFlags.ARRAY_CHILDREN // 数组
+    } else if(isObject(children)) {
+      type = ShapeFlags.SLOTS_CHILDREN; // 插槽
     } else {
       type = ShapeFlags.TEXT_CHILDREN // 文本
     }
