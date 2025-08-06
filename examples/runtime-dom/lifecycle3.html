@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>lifecycle</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // import { ref, render, h, Text, getCurrentInstance, onBeforeMount, onMounted, onBeforeUpdate, onUpdated, onBeforeUnmount, onUnmounted } from '../../node_modules/vue/dist/vue.esm-browser.js'
+    import { ref, render, h, Text, getCurrentInstance, onBeforeMount, onMounted, onBeforeUpdate, onUpdated, onBeforeUnmount, onUnmounted } from '../../packages/vue/dist/vue.esm.js'
+
+    const hooks = (name) => {
+      onBeforeMount(() => {
+        const instance = getCurrentInstance()
+        console.log(`${name} beforeMount`, instance)
+      })
+      onMounted(() => {
+        console.log(`${name} mounted`)
+      })
+      onBeforeUpdate(() => {
+        console.log(`${name} beforeUpdate`)
+      })
+      onUpdated(() => {
+        console.log(`${name} updated`)
+      })
+      onBeforeUnmount(() => {
+        console.log(`${name} beforeUnmount`)
+      })
+      onUnmounted(() => {
+        console.log(`${name} unmount`)
+      })
+    }
+
+
+    const Modal = {
+      props: {
+        visible: Boolean,
+        name: String,
+      },
+      setup(props, ctx) {
+        console.log('Modal(Child) setup', props)
+        const instance = getCurrentInstance()
+        console.log('Modal(Child) instance', instance)
+        const name = ref(props.name)
+        setTimeout(() => {
+          name.value = 'changed'
+        }, 2000);
+        hooks('Modal(Child)')
+        return () => h('div', {}, [
+          h('div', {}, name.value)
+        ])
+      },
+    }
+
+    const App = {
+      // setup 代替 beforeCreate 和 created
+      setup(props, ctx) {
+        console.log('App(Parent) setup')
+        const name = ref('test')
+        const visible = ref(true)
+        const instance = getCurrentInstance()
+        console.log('App(Parent) instance', instance)
+
+        // TODO 下面的生命周期勾子只能在setup函数中调用
+        hooks('App(Parent)')
+
+        // 当返回一个对象时，会作为setup函数的返回值，此时this指向setup函数的返回值
+        return () => {
+          return h('div', {}, [
+            h('h2', {}, `name: ${name.value}`),
+            visible.value ? h(Modal, {visible: visible.value, name: 'modal', key: 'modal'}) : null,
+            h('button', { onClick: () => visible.value = !visible.value }, visible.value ? 'close' : 'open')
+          ])
+        }
+      },
+    }
+    // 这个实现方案是 依赖收集
+    // 1)在setup没执行之前，我让当前的实例 放到全局上
+    // 2)调用setup的时候 内部调用的钩子就可以找到当前的实例，让实例将钩子收集起来
+    // 3)setup执行完毕后 将当前实例还原
+    render(h(App, {}), document.querySelector('#app'))
+
+    setTimeout(() => {
+      // render(null, document.querySelector('#app'))
+    }, 1500);
+  </script>
+</body>
+</html>

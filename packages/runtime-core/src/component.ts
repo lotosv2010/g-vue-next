@@ -5,6 +5,8 @@ import { PublicInstanceProxyHandlers } from "./componentPublicInstance";
 import { initProps } from "./componentProps";
 import { initSlots } from "./componentSlots";
 import { emit } from "./componentEmits";
+import { LifecycleHooks } from "./enums";
+import { SchedulerJob } from "./scheduler";
 
 export type Data = Record<string, unknown>;
 
@@ -38,6 +40,8 @@ export type SetupContext = {
   expose: (exposed?: Data) => void  
 }
 
+export type LifecycleHook<TFn = Function> = (TFn & SchedulerJob)[] | null
+
 export interface ComponentInternalInstance {
   vnode: VNode
   parent: ComponentInternalInstance | null
@@ -65,6 +69,20 @@ export interface ComponentInternalInstance {
   // lifecycle hooks
   isMounted: boolean
   isUnmounted: boolean
+  [LifecycleHooks.BEFORE_CREATE]: LifecycleHook
+  [LifecycleHooks.CREATED]: LifecycleHook
+  [LifecycleHooks.BEFORE_MOUNT]: LifecycleHook
+  [LifecycleHooks.MOUNTED]: LifecycleHook
+  [LifecycleHooks.BEFORE_UPDATE]: LifecycleHook
+  [LifecycleHooks.UPDATED]: LifecycleHook
+  [LifecycleHooks.BEFORE_UNMOUNT]: LifecycleHook
+  [LifecycleHooks.UNMOUNTED]: LifecycleHook
+  [LifecycleHooks.RENDER_TRACKED]: LifecycleHook
+  [LifecycleHooks.RENDER_TRIGGERED]: LifecycleHook
+  [LifecycleHooks.ACTIVATED]: LifecycleHook
+  [LifecycleHooks.DEACTIVATED]: LifecycleHook
+  [LifecycleHooks.ERROR_CAPTURED]: LifecycleHook
+  [LifecycleHooks.SERVER_PREFETCH]: LifecycleHook<() => Promise<unknown>>
 }
 
 export type Component = 
@@ -98,6 +116,20 @@ export function createComponentInstance (
     setupState: EMPTY_OBJ,
     isMounted: false, // 组件是否已挂载
     isUnmounted: false, // 组件是否已卸载
+    bc: null,
+    c: null,
+    bm: null,
+    m: null,
+    bu: null,
+    u: null,
+    um: null,
+    bum: null,
+    da: null,
+    a: null,
+    rtg: null,
+    rtc: null,
+    ec: null,
+    sp: null,
   }
   instance.ctx = {_: instance } // 创建组件实例的 ctx 属性
   instance.root = parent ? parent.root : instance // 创建组件实例的 root 属性
@@ -130,7 +162,7 @@ function setupStatefulComponent(instance: ComponentInternalInstance) {
     // 执行setup函数，返回setup函数的返回值
     const setupResult = setup(instance.props, setupContext)
     // 重置当前组件实例
-    setCurrentInstance(null)
+    unsetCurrentInstance()
     // 如果 setup 的返回值是函数，则将返回值作为组件的 render 函数
     if (isFunction(setupResult)) {
       instance.render = setupResult
@@ -160,10 +192,19 @@ export let currentInstance: ComponentInternalInstance | null = null
 export const getCurrentInstance: () => ComponentInternalInstance | null = () => {
   return currentInstance
 }
+const internalSetCurrentInstance: (instance: ComponentInternalInstance | null) => void = (i) => {
+  currentInstance = i
+}
 // 设置当前组件实例
 export function setCurrentInstance(instance: ComponentInternalInstance) {
-  currentInstance = instance
-  return () => (currentInstance = null)
+  const prev = currentInstance
+  internalSetCurrentInstance(instance)
+  return (): void => {
+    internalSetCurrentInstance(prev)
+  }
+}
+export const unsetCurrentInstance = () => {
+  internalSetCurrentInstance(null)
 }
 export function createSetupContext(instance: ComponentInternalInstance): SetupContext {
   const expose: SetupContext['expose'] = exposed => {

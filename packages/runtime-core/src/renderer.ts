@@ -1,4 +1,4 @@
-import { isNil, NOOP, ShapeFlags } from "@g-vue-next/shared";
+import { invokeArrayFns, isNil, NOOP, ShapeFlags } from "@g-vue-next/shared";
 import { Comment, Fragment, isSameVNodeType, mergeProps, normalizeVNode, Text, type VNode, type VNodeArrayChildren } from "./vnode";
 import { ComponentInternalInstance, createComponentInstance, setupComponent } from "./component";
 import { reactive, ReactiveEffect } from "@g-vue-next/reactivity";
@@ -405,8 +405,12 @@ function baseCreateRenderer<
     namespace
   ) => {
     const componentUpdateFn = () => {
-      const { render } = instance
+      const { render, bm, m } = instance
       if (!instance.isMounted) {
+        // TODO Lifecycle Hooks beforeMount
+        if (bm) {
+          invokeArrayFns(bm)
+        }
         // subtree 为第一次渲染产生的vnode，这里的作用是缓存子树, 用于后续的更新
         const subTree = (instance.subTree = render.call(instance.proxy, instance.proxy))
         // 合并组件的attrs到渲染结果中，attrs是未声明的props
@@ -417,10 +421,19 @@ function baseCreateRenderer<
         initialVNode.el = subTree.el
         // 标记组件已挂载
         instance.isMounted = true
+        // TODO Lifecycle Hooks mounted
+        if (m) {
+          invokeArrayFns(m)
+        }
       } else {
+        const { bu, u} = instance
         // 如果有 next 说明需要更新属性和插槽
         if (instance.next) {
           updateComponentPreRender(instance, instance.next)
+        }
+        // TODO Lifecycle Hooks beforeUpdate
+        if (bu) {
+          invokeArrayFns(bu)
         }
         // 获取组件的虚拟DOM
         const nextTree = render.call(instance.proxy, instance.proxy)
@@ -432,6 +445,10 @@ function baseCreateRenderer<
         instance.subTree = nextTree
         // 更新组件
         patch(prevTree, nextTree, hostParentNode(prevTree.el as any), anchor, null, parentSuspense, namespace)
+        // TODO Lifecycle Hooks updated
+        if (u) {
+          invokeArrayFns(u)
+        }
       }
     }
 
@@ -492,7 +509,7 @@ function baseCreateRenderer<
     // (a b) d e
     while (i <= e1 && i<= e2) {
       const n1 = c1[i] // 旧子节点的第一个节点
-      const n2 = normalizeVNode(c2[i]) // 新子节点的第一个节点
+      const n2 = c2[i] = normalizeVNode(c2[i]) // 新子节点的第一个节点
       // 如果新旧节点相同
       if (isSameVNodeType(n1, n2)) {
         // 递归对比
@@ -508,7 +525,7 @@ function baseCreateRenderer<
     // d e (b c)
     while (i<=e1 && i <= e2) {
       const n1 = c1[e1] // 旧子节点的最后一个节点
-      const n2 = normalizeVNode(c2[e2]) // 新子节点的最后一个节点
+      const n2 = c2[e2] = normalizeVNode(c2[e2]) // 新子节点的最后一个节点
       if (isSameVNodeType(n1, n2)) {
         patch(n1, n2, container, null, parentComponent, parentSuspense, namespace)
       } else {
@@ -533,7 +550,7 @@ function baseCreateRenderer<
         // vue 3 的实现是 判断 下一个元素的长度是否越界
         const anchor = nextPos < l2 ? (c2?.[nextPos] as VNode)?.el : parentAnchor // 获取下一个元素的及锚点
         while (i <= e2) {
-          patch(null, normalizeVNode(c2[i]), container, anchor, parentComponent, parentSuspense, namespace)
+          patch(null, c2[i] = normalizeVNode(c2[i]), container, anchor, parentComponent, parentSuspense, namespace)
           i++
         }
       }
@@ -565,7 +582,7 @@ function baseCreateRenderer<
       // 5.1. build key: index map for children ==> 构建新子节点的键索引映射表
       const keyToNewIndexMap: Map<PropertyKey, number> = new Map() // 键索引映射表
       for (let i = s2; i <= e2; i++) {
-        const nextChild = normalizeVNode(c2[i])
+        const nextChild = c2[i] = normalizeVNode(c2[i])
         if (!isNil(nextChild.key)) {
           keyToNewIndexMap.set(nextChild.key, i)
         }
@@ -798,8 +815,16 @@ function baseCreateRenderer<
     parentSuspense: any | null,
     doRemove?: boolean
   ) => {
-    const { subTree } = instance
+    const { subTree, bum, um } = instance
+    // TODO Lifecycle Hooks beforeUnmount
+    if (bum) {
+      invokeArrayFns(bum)
+    }
     unmount(subTree, instance, parentSuspense, doRemove)
+    // TODO Lifecycle Hooks unmounted
+    if (um) {
+      invokeArrayFns(um)
+    }
   };
 
   const remove: RemoveFn = (vnode) => {

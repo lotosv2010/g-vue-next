@@ -21,6 +21,8 @@ export const isString = (val: unknown): val is string => typeof val === 'string'
 export const isNil = (val: unknown): val is null | undefined => val == null
 // 创建一个空对象
 export const EMPTY_OBJ = {}
+// 创建一个空数组
+export const EMPTY_ARR = []
 // 获取对象的属性
 export const ownProperty = Object.prototype.hasOwnProperty
 // 判断对象中是否有某个属性
@@ -43,3 +45,9 @@ export const toHandlerKey = (str: string) => {
   const s = str ? `on${capitalize(str)}` : ``
   return s
 } 
+// 批量调用函数
+export const invokeArrayFns = (fns, ...arg) => {
+  for (let i = 0; i < fns.length; i++) {
+    fns[i](...arg)
+  }
+}
