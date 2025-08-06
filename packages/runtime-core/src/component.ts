@@ -53,6 +53,7 @@ export interface ComponentInternalInstance {
   update: () => void
   render: InternalRenderFunction | null
   renderCache: (Function | VNode | undefined)[]
+  provides: Data
   ctx: Data
   proxy: any | null
   propsOptions: Data
@@ -103,6 +104,7 @@ export function createComponentInstance (
     update: null, // 组件的更新函数：创建一个函数，用于更新组件 ==> effect.run()
     render: null, // 组件的 render 函数
     renderCache: [], // 缓存组件的 render 函数的返回值
+    provides: parent ? parent.provides : Object.create(null),
     ctx: EMPTY_OBJ, // 组件的上下文
     exposed: null, // 组件的暴露对象
     exposeProxy: null, // 组件的 exposed 代理对象

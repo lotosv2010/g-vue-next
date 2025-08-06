@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>provide&inject</title>
+  <style>
+    body {
+      margin: 0;
+    }
+    #app {
+      background-color: rgb(227, 176, 176);
+      width: 100vw;
+      height: 300px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // import { ref, render, h, provide, inject, reactive, getCurrentInstance } from '../../node_modules/vue/dist/vue.esm-browser.js'
+    import { ref, render, h, provide, inject, reactive, getCurrentInstance } from '../../packages/vue/dist/vue.esm.js'
+
+    const GrandChild = {
+      setup() {
+        console.log('grand child setup: ', getCurrentInstance())
+        const message = inject('message')
+        const age = inject('age')
+        const name = inject('name', 'no name')
+        const city = inject('city', 'no city')
+        const job = inject('job', () => 'no job', true)
+        return () => h('div', {class: 'grand-child'}, [
+          h('p', {}, 'message to grand child:' + message?.value),
+          h('p', {}, 'age to grand child:' + age?.value),
+          h('p', {}, 'name to grand child:' + name),
+          h('p', {}, 'city to grand child:' + city),
+          h('p', {}, 'job to grand child:' + job),
+        ])
+      }
+    }
+
+    const Child = {
+      setup() {
+        console.log('child setup: ', getCurrentInstance())
+        const message = ref('hello vue3')
+        const age = ref(18)
+        provide('name', 'Robin')
+        provide('age', age)
+        return () => h('div', {class: 'child'}, [
+          h(GrandChild, { })
+        ])
+      }
+    }
+
+    const App = {
+      setup() { 
+        console.log('app setup: ', getCurrentInstance())
+        const message = ref('hello world')
+        const state = reactive({
+          message: 'hello world'
+        })
+        // 这里的message是响应式的，但是子组件拿到的message不是响应式的， 因为provide的参数是浅的
+        // provide('message', state.message) 
+        provide('message', message)
+        provide('name', 'Join') // 被子组件的provide覆盖了
+
+        return () => h('div', {class: 'app'}, [
+          h('input', {value: message.value, onInput(e) {
+            // console.log(state)
+            message.value = e.target.value
+            state.message = e.target.value
+          } }),
+          h('p', {}, state.message),
+          h(Child, { class: 'child' })
+        ])
+      }
+    }
+
+    render(h(App, {}), document.querySelector('#app'))
+  </script>
+</body>
+</html>

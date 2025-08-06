@@ -431,7 +431,7 @@ function baseCreateRenderer<
         // 合并组件的attrs到渲染结果中，attrs是未声明的props
         subTree.props = mergeProps(instance.attrs, subTree.props)
         // 挂载组件
-        patch(null, subTree, container, anchor, null, parentSuspense, namespace)
+        patch(null, subTree, container, anchor, instance, parentSuspense, namespace)
         // 缓存组件的el
         initialVNode.el = subTree.el
         // 标记组件已挂载
@@ -459,7 +459,7 @@ function baseCreateRenderer<
         // 更新组件的虚拟DOM
         instance.subTree = nextTree
         // 更新组件
-        patch(prevTree, nextTree, hostParentNode(prevTree.el as any), anchor, null, parentSuspense, namespace)
+        patch(prevTree, nextTree, hostParentNode(prevTree.el as any), anchor, instance, parentSuspense, namespace)
         // TODO Lifecycle Hooks updated
         if (u) {
           invokeArrayFns(u)
