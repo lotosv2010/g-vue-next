@@ -3,6 +3,7 @@ import type { RendererElement, RendererNode } from "./renderer";
 import { isArray, isFunction, isObject, isOn, isString, normalizeClass, normalizeStyle, ShapeFlags } from "@g-vue-next/shared";
 import { Component, ComponentInternalInstance, currentInstance } from "./component";
 import { RawSlots } from "./componentSlots";
+import { isTeleport } from './components/Teleport'
 
 type Data = Record<string, unknown>;
 export type VNodeRef = 
@@ -72,6 +73,7 @@ export interface VNode<
   // DOM
   el: HostNode | null
   anchor: HostNode | null
+  target: HostElement | null
   
   // optimization
   shapeFlag: number
@@ -109,6 +111,7 @@ function createBaseVNode(
     component: null, // 组件实例
     shapeFlag, // 元素节点的标识
     el: null, // 虚拟节点对应的真实元素节点
+    target: null, // 组件的根节点
     key: props && normalizeKey(props), // 虚拟节点的key
     ref: props && normalizeRef(props),
   } as VNode
@@ -138,6 +141,8 @@ function _createVNode(
 ): VNode {
   const shapeFlag = isString(type) // 元素节点
     ? ShapeFlags.ELEMENT
+    : isTeleport(type) // teleport
+    ? ShapeFlags.TELEPORT
     : isObject(type) // 组件节点
     ? ShapeFlags.STATEFUL_COMPONENT
     : isFunction(type) // 函数式组件节点

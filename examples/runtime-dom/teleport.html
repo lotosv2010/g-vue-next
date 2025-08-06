@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>teleport</title>
+  <style>
+    body {
+      margin: 0;
+    }
+    #app {
+      background-color: rgb(227, 176, 176);
+      width: 100vw;
+      height: 100px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="home"></div>
+  <div id="dashboard"></div>
+  <div id="about"></div>
+  <script type="module">
+    // import { ref, render, h, Text, Fragment, Teleport } from '../../node_modules/vue/dist/vue.esm-browser.js'
+    import { ref, render, h, Text, Fragment, Teleport } from '../../packages/vue/dist/vue.esm.js'
+
+    const App = {
+      setup() {
+        const visible = ref(true)
+        const hide = ref(false)
+        return () => h(Fragment, {}, [
+          h('div', 'app'),
+          h('button', {
+            onClick: () => visible.value = !visible.value
+          }, 'toggle'),
+          h('button', {
+            onClick: () => hide.value = !hide.value
+          }, hide.value ? 'hide' : 'show'),
+          visible.value ?
+            h(Teleport, { to: '#home' }, h('div', {style: { background: 'lightgreen' }}, 'home'))
+            : h(Teleport, { to: '#dashboard' }, h('p', {style: { background: 'orange' }}, 'dashboard')),
+          !hide.value ?
+            h(Teleport, { to: '#about' }, h('div', {style: { background: 'lightgreen' }}, 'about'))
+            : null
+        ])
+      }
+    }
+
+    render(h(App, {}), document.querySelector('#app'))
+  </script>
+</body>
+</html>

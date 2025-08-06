@@ -7,6 +7,7 @@ import { updateProps } from "./componentProps";
 import { renderComponentRoot, shouldUpdateComponent } from "./componentRenderUtils";
 import { updateSlots } from "./componentSlots";
 import { setRef } from "./rendererTemplateRef";
+import { TeleportEndKey, TeleportVNode } from "./components/Teleport";
 
 export interface Renderer<HostElement = RendererElement> {
   render: RootRenderFunction<HostElement>
@@ -125,6 +126,22 @@ type PatchFn = (
   parentSuspense: any | null,
   namespace: ElementNamespace
 ) => void
+type NextFn = (vnode: VNode) => RendererNode | null
+export interface RendererInternals<
+  HostNode = RendererNode,
+  HostElement = RendererElement
+>{
+  p: PatchFn
+  um: UnmountFn
+  r: RemoveFn
+  m: MoveFn
+  mt: MountComponentFn
+  mc: MountChildrenFn
+  pc: PatchChildrenFn
+  pbc: PatchChildrenFn
+  n: NextFn
+  o: RendererOptions<HostNode, HostElement>
+}
 
 export function createRenderer<
   HostNode = RendererNode,
@@ -198,6 +215,19 @@ function baseCreateRenderer<
           processElement(n1, n2, container, anchor, parentComponent, parentSuspense, namespace)
         } else if(shapeFlag & ShapeFlags.COMPONENT) { // 组件
           processComponent(n1, n2, container, anchor, parentComponent, parentSuspense, namespace)
+        } else if (shapeFlag & ShapeFlags.TELEPORT) { // teleport
+          ;(type as any).process(
+            n1 as TeleportVNode,
+            n2 as TeleportVNode,
+            container,
+            anchor,
+            parentComponent,
+            parentSuspense,
+            null,
+            true,
+            namespace,
+            internals
+          )
         }
         break
     }
@@ -310,7 +340,11 @@ function baseCreateRenderer<
     moveType,
     parentSuspense = null
   ) => {
-    const { el } = vnode
+    const { el, type, shapeFlag, children } = vnode
+    if (shapeFlag & ShapeFlags.COMPONENT) {
+      move(vnode.component.subTree, container, anchor, moveType)
+      return
+    }
     hostInsert(el as any, container as any, anchor as any)
   }
 
@@ -811,6 +845,8 @@ function baseCreateRenderer<
     // 卸载组件
     if (shapeFlag & ShapeFlags.COMPONENT) {
       unmountComponent(vnode.component, parentSuspense, doRemove)
+    } else if(shapeFlag & ShapeFlags.TELEPORT) {
+      ;(vnode.type as any).remove(vnode, parentComponent, parentSuspense, internals, doRemove)
     } else {
       remove(vnode)
     }
@@ -893,6 +929,28 @@ function baseCreateRenderer<
     }
     // 保存当前的节点，方便再次渲染的时候，进行比对
     container._vnode = vnode
+  }
+
+  const getNextHostNode: NextFn = vnode => {
+    if (vnode.shapeFlag & ShapeFlags.TELEPORT) {
+      return getNextHostNode(vnode.component.subTree)
+    }
+    const el = hostNextSibling((vnode.anchor || vnode.el) as any)
+    const teleportEnd = el && el[TeleportEndKey]
+    return teleportEnd ? hostNextSibling(teleportEnd) : el
+  }
+
+  const internals: RendererInternals = {
+    p: patch,
+    um: unmount,
+    m: move,
+    r: remove,
+    mt: mountComponent,
+    mc: mountChildren,
+    pc: patchChildren,
+    pbc: patchChildren,
+    n: getNextHostNode,
+    o: options
   }
 
   return {
