@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ref</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // import { ref, render, h, Text, getCurrentInstance } from '../../node_modules/vue/dist/vue.esm-browser.js'
+    import { ref, render, h, Text, getCurrentInstance } from '../../packages/vue/dist/vue.esm.js'
+
+    const Modal = {
+      props: {
+        name: String,
+      },
+      setup(props, ctx) {
+        const name = ref(props.name)
+        const age = ref(18)
+        const add = () => {
+          age.value++
+        }
+
+        ctx.expose({
+          age,
+          add,
+        })
+
+        return () => h('div', {}, [
+          h('div', {}, `${name.value}, ${age.value}`),
+        ])
+      },
+    }
+
+    const App = {
+      // setup 代替 beforeCreate 和 created
+      setup(props, ctx) {
+        const name = ref('test')
+        const comp = ref(null)
+
+        // 当返回一个对象时，会作为setup函数的返回值，此时this指向setup函数的返回值
+        return () => {
+          return h('div', {}, [
+            h('h2', {}, `name: ${name.value}`),
+            h(Modal, {name: 'modal', key: 'modal', ref: comp}), ,
+            h('button', { onClick: () => {
+              console.log(comp.value)
+              comp.value.add()
+            }}, 'add child age')
+          ])
+        }
+      },
+    }
+    render(h(App, {}), document.querySelector('#app'))
+  </script>
+</body>
+</html>

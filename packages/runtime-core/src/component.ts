@@ -218,3 +218,13 @@ export function createSetupContext(instance: ComponentInternalInstance): SetupCo
     expose,
   }
 }
+export function getComponentPublicInstance(
+  instance: ComponentInternalInstance
+) {
+  if (instance.exposed) {
+    // 这里简化了源码
+    return instance.exposed
+  } else {
+    return instance.proxy
+  }
+}

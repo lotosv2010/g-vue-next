@@ -1,7 +1,7 @@
-import { type Ref } from "@g-vue-next/reactivity";
+import { isRef, type Ref } from "@g-vue-next/reactivity";
 import type { RendererElement, RendererNode } from "./renderer";
-import { isArray, isObject, isOn, isString, normalizeClass, normalizeStyle, ShapeFlags } from "@g-vue-next/shared";
-import { Component, ComponentInternalInstance } from "./component";
+import { isArray, isFunction, isObject, isOn, isString, normalizeClass, normalizeStyle, ShapeFlags } from "@g-vue-next/shared";
+import { Component, ComponentInternalInstance, currentInstance } from "./component";
 import { RawSlots } from "./componentSlots";
 
 type Data = Record<string, unknown>;
@@ -13,6 +13,8 @@ export type VNodeRef =
 export type VNodeProps = { 
   key?: PropertyKey,
   ref?: VNodeRef
+  ref_for?: boolean
+  ref_key?: string
 }
 
 export type VNodeTypes = 
@@ -42,6 +44,17 @@ export type VNodeNormalizedChildren =
   | RawSlots
   | null
 
+export type VNodeNormalizedRefAtom = {
+  i: ComponentInternalInstance,
+  r: VNodeRef,
+  k?: string,
+  f?: boolean
+}
+
+export type VNodeNormalizedRef = 
+  | VNodeNormalizedRefAtom
+  | VNodeNormalizedRefAtom[]
+
 export interface VNode<
   HostNode = RendererNode,
   HostElement = RendererElement,
@@ -52,6 +65,7 @@ export interface VNode<
   type: VNodeTypes;
   key: PropertyKey | null
   props: (VNodeProps & ExtraProps) | null
+  ref: VNodeNormalizedRef | null
 
   children: VNodeNormalizedChildren
   component: ComponentInternalInstance | null
@@ -65,6 +79,21 @@ export interface VNode<
 
 const normalizeKey = ({ key }: VNodeProps): VNodeProps['key'] => 
   key != null ? key : null
+const normalizeRef = ({
+  ref,
+  ref_key,
+  ref_for,
+}: VNodeProps): VNodeNormalizedRefAtom | null => {
+  if (typeof ref === 'number') {
+    ref = '' + ref
+  }
+  return (ref != null
+    ? isString(ref) || isRef(ref) || isFunction(ref)
+      ? { i: currentInstance, r: ref, k: ref_key, f: !!ref_for }
+      : ref
+    : null
+  ) as any
+}
 
 function createBaseVNode(
   type: VNodeTypes,
@@ -81,6 +110,7 @@ function createBaseVNode(
     shapeFlag, // 元素节点的标识
     el: null, // 虚拟节点对应的真实元素节点
     key: props && normalizeKey(props), // 虚拟节点的key
+    ref: props && normalizeRef(props),
   } as VNode
 
   // 如果有子节点，则标记子节点的类型

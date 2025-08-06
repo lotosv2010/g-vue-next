@@ -1,11 +1,12 @@
 import { invokeArrayFns, isNil, NOOP, ShapeFlags } from "@g-vue-next/shared";
 import { Comment, Fragment, isSameVNodeType, mergeProps, normalizeVNode, Text, type VNode, type VNodeArrayChildren } from "./vnode";
 import { ComponentInternalInstance, createComponentInstance, setupComponent } from "./component";
-import { reactive, ReactiveEffect } from "@g-vue-next/reactivity";
+import { ReactiveEffect } from "@g-vue-next/reactivity";
 import { queueJob } from "./scheduler";
 import { updateProps } from "./componentProps";
 import { shouldUpdateComponent } from "./componentRenderUtils";
 import { updateSlots } from "./componentSlots";
+import { setRef } from "./rendererTemplateRef";
 
 export interface Renderer<HostElement = RendererElement> {
   render: RootRenderFunction<HostElement>
@@ -115,6 +116,15 @@ export type SetupRenderEffectFn = (
   parentSuspense: any | null,
   namespace: ElementNamespace
 ) => void
+type PatchFn = (
+  n1: VNode | null,
+  n2: VNode,
+  container: RendererElement,
+  anchor: RendererNode | null,
+  parentComponent: any | null,
+  parentSuspense: any | null,
+  namespace: ElementNamespace
+) => void
 
 export function createRenderer<
   HostNode = RendererNode,
@@ -146,7 +156,7 @@ function baseCreateRenderer<
   /*************** 处理节点 ***************/
 
   // patch 的主要作用：对比新前后的节点，并更新 DOM
-  const patch = (
+  const patch: PatchFn = (
     n1,
     n2,
     container,
@@ -166,7 +176,7 @@ function baseCreateRenderer<
       n1 = null // 将老节点置为空，后面会挂载新节点
     }
 
-    const { type, shapeFlag} = n2
+    const { type, shapeFlag, ref } = n2
     //! ⚠️ 每增加一种类型都需要考虑首次渲染、更新、卸载 三种情况
     switch (type) {
       // 文本节点：最简单的节点类型，只包含纯文本内容
@@ -190,6 +200,11 @@ function baseCreateRenderer<
           processComponent(n1, n2, container, anchor, parentComponent, parentSuspense, namespace)
         }
         break
+    }
+
+    // 设置 ref
+    if (!isNil(ref)) {
+      setRef(ref, n1 && n1.ref, parentSuspense, n2 || n1, !n2)
     }
   }
 
@@ -600,7 +615,7 @@ function baseCreateRenderer<
           unmount(prevChild, parentComponent, parentSuspense, true)
         } else { // 旧子节点在新子节点中存在，则复用
           // 获取新的子节点
-          const nextChild = c2[nextIndex]
+          const nextChild = c2[nextIndex] as VNode
           // 记录旧子节点在新子节点中的索引
           newIndexToOldIndexMap[nextIndex - s2] = i + 1
           // 比较新老节点的差异，更新属性和子节点
