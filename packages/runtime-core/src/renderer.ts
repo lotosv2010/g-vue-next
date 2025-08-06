@@ -4,7 +4,7 @@ import { ComponentInternalInstance, createComponentInstance, setupComponent } fr
 import { ReactiveEffect } from "@g-vue-next/reactivity";
 import { queueJob } from "./scheduler";
 import { updateProps } from "./componentProps";
-import { shouldUpdateComponent } from "./componentRenderUtils";
+import { renderComponentRoot, shouldUpdateComponent } from "./componentRenderUtils";
 import { updateSlots } from "./componentSlots";
 import { setRef } from "./rendererTemplateRef";
 
@@ -427,7 +427,7 @@ function baseCreateRenderer<
           invokeArrayFns(bm)
         }
         // subtree 为第一次渲染产生的vnode，这里的作用是缓存子树, 用于后续的更新
-        const subTree = (instance.subTree = render.call(instance.proxy, instance.proxy))
+        const subTree = (instance.subTree = renderComponentRoot(instance))
         // 合并组件的attrs到渲染结果中，attrs是未声明的props
         subTree.props = mergeProps(instance.attrs, subTree.props)
         // 挂载组件
@@ -451,7 +451,7 @@ function baseCreateRenderer<
           invokeArrayFns(bu)
         }
         // 获取组件的虚拟DOM
-        const nextTree = render.call(instance.proxy, instance.proxy)
+        const nextTree = renderComponentRoot(instance)
         // 获取更新前的组件的虚拟DOM
         const prevTree = instance.subTree
         // 合并组件的props和attrs，保持与挂载时一致的逻辑

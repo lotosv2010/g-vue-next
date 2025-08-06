@@ -1,5 +1,6 @@
-import { Data } from "./component"
-import { VNode } from "./vnode"
+import { ShapeFlags } from "@g-vue-next/shared"
+import { ComponentInternalInstance, Data } from "./component"
+import { Comment, createVNode, normalizeVNode, VNode } from "./vnode"
 
 export function shouldUpdateComponent(
   prevVNode: VNode,
@@ -37,4 +38,24 @@ export function hasPropsChanged(
     return prevProps[key] !== nextProps[key]
   }
   return false
+}
+
+export function renderComponentRoot(
+  instance: ComponentInternalInstance
+): VNode {
+  const { render, vnode, proxy, props, type: Component, attrs } = instance
+  let result
+  try {
+    if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+      result = normalizeVNode(render.call(proxy, proxy))
+    } else {
+      const render = Component as Function
+      const hasProps = Object.keys(props ?? {}).length > 0
+      result = normalizeVNode(render(hasProps ? props : attrs, null))
+    }
+  } catch (error) {
+    result = createVNode(Comment)
+    console.error(error)
+  }
+  return result
 }

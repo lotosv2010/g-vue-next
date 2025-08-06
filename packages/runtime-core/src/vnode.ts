@@ -140,6 +140,8 @@ function _createVNode(
     ? ShapeFlags.ELEMENT
     : isObject(type) // 组件节点
     ? ShapeFlags.STATEFUL_COMPONENT
+    : isFunction(type) // 函数式组件节点
+    ? ShapeFlags.FUNCTIONAL_COMPONENT
     : 0
   return createBaseVNode(type, props, children, shapeFlag)
 }
