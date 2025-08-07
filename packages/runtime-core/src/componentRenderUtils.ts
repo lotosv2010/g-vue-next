@@ -43,7 +43,7 @@ export function hasPropsChanged(
 export function renderComponentRoot(
   instance: ComponentInternalInstance
 ): VNode {
-  const { render, vnode, proxy, props, type: Component, attrs } = instance
+  const { render, vnode, proxy, props, type: Component, attrs, emit, slots } = instance
   let result
   try {
     if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
@@ -51,7 +51,7 @@ export function renderComponentRoot(
     } else {
       const render = Component as Function
       const hasProps = Object.keys(props ?? {}).length > 0
-      result = normalizeVNode(render(hasProps ? props : attrs, null))
+      result = normalizeVNode(render(hasProps ? props : attrs, { attrs, slots, emit }))
     }
   } catch (error) {
     result = createVNode(Comment)

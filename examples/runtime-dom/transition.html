@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transition</title>
+  <style>
+    .v-enter-active,
+    .v-leave-active {
+      transition: opacity 2s ease;
+    }
+
+    .v-enter-from,
+    .v-leave-to {
+      opacity: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // import { ref, render, h, Fragment, Transition } from '../../node_modules/vue/dist/vue.esm-browser.js'
+    import { ref, render, h, Fragment, Transition } from '../../packages/vue/dist/vue.esm.js'
+
+    const transitionProps = {
+      mode: 'out-in',
+      onBeforeEnter(el) {
+        console.log('onBeforeEnter', el)
+      },
+      onEnter(el) {
+        console.log('onEnter', el)
+      },
+      onAfterEnter(el) {
+        console.log('onAfterEnter', el)
+      },
+      onBeforeLeave(el) {
+        console.log('onBeforeLeave', el)
+      },
+      onLeave(el) {
+        console.log('onLeave', el)
+      },
+      onAfterLeave(el) {
+        console.log('onAfterLeave', el)
+      }
+    }
+    const style = {
+      width: '100px',
+      height: '100px',
+      background: 'red',
+      display: 'flex',
+      'justify-content': 'center',
+      'align-items': 'center',
+      color: 'yellow'
+    }
+    const App = {
+      setup() {
+        const show = ref(true)
+        return () => h(Fragment, [
+          h('button', {
+            onClick: () => {
+              show.value = !show.value
+            }
+          }, 'toggle'),
+          h(Transition, transitionProps, {
+            default: () => show.value ? h('p', { style }, 'hello') : null
+            // default: () => h('p', { style: { ...style, display: show.value ? 'flex' : 'none' } }, 'hello')
+          })
+        ])
+      }
+    }
+
+    render(h(App), document.getElementById('app'))
+  </script>
+</body>
+
+</html>

@@ -88,6 +88,16 @@ export interface ComponentInternalInstance {
 
 export type Component = 
   | ComponentInternalInstance
+
+export interface FunctionalComponent<
+  P = {},
+  E extends Record<string, any[]> = {},
+  S extends Record<string, any> = any,
+  EE extends Record<string, any> = any
+> {
+  (props: P, { slots }: { slots: InternalSlots }): any
+}
+
 // 创建组件实例
 export function createComponentInstance (
   vnode: VNode,

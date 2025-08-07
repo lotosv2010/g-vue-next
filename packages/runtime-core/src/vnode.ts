@@ -70,6 +70,7 @@ export interface VNode<
 
   children: VNodeNormalizedChildren
   component: ComponentInternalInstance | null
+  transition: any | null
   // DOM
   el: HostNode | null
   anchor: HostNode | null
@@ -109,6 +110,7 @@ function createBaseVNode(
     props, // 属性
     children, // 子节点
     component: null, // 组件实例
+    transition: null, // 过渡
     shapeFlag, // 元素节点的标识
     el: null, // 虚拟节点对应的真实元素节点
     target: null, // 组件的根节点

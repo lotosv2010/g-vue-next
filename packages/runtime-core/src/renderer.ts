@@ -371,6 +371,7 @@ function baseCreateRenderer<
       updateComponent(n1, n2)
     }
   }
+
   /*************** 挂载 ***************/
   // 挂载元素节点
   const mountElement = (
@@ -381,7 +382,7 @@ function baseCreateRenderer<
     parentSuspense: any | null,
     namespace: ElementNamespace
   ) => {
-    const { type, props, shapeFlag, children } = vnode
+    const { type, props, shapeFlag, children, transition } = vnode
     // 创建元素节点
     // 第一次渲染的时候我么让虚拟节点和真实的dom 创建关联 vnode.el = 真实dom
     // 第二次渲染新的vnode，可以和上一次的vnode做比对，之后更新对应的el元素，可以后续再复用这个dom元素
@@ -399,9 +400,18 @@ function baseCreateRenderer<
     } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) { // 数组节点
       mountChildren((children) as VNodeArrayChildren, el, null, parentComponent, parentSuspense, namespace)
     }
-    
+
+    //! 处理过渡
+    if (transition) {
+      transition.beforeEnter(el)
+    }
     // 插入元素
     hostInsert(el, container as any, anchor as any)
+
+    //! 处理过渡
+    if (transition) {
+      transition.enter(el)
+    }
   }
   // 挂载子节点
   const mountChildren: MountChildrenFn = (
@@ -463,7 +473,10 @@ function baseCreateRenderer<
         // subtree 为第一次渲染产生的vnode，这里的作用是缓存子树, 用于后续的更新
         const subTree = (instance.subTree = renderComponentRoot(instance))
         // 合并组件的attrs到渲染结果中，attrs是未声明的props
-        subTree.props = mergeProps(instance.attrs, subTree.props)
+        // ? 这里源码中没有，为了简化逻辑，这里做了处理
+        if (!['BaseTransition', 'Transition'].includes(instance.type.name)) {
+          subTree.props = mergeProps(instance.attrs, subTree.props)
+        }
         // 挂载组件
         patch(null, subTree, container, anchor, instance, parentSuspense, namespace)
         // 缓存组件的el
@@ -489,7 +502,10 @@ function baseCreateRenderer<
         // 获取更新前的组件的虚拟DOM
         const prevTree = instance.subTree
         // 合并组件的props和attrs，保持与挂载时一致的逻辑
-        nextTree.props = mergeProps(instance.attrs, nextTree.props)
+        // ? 这里源码中没有，为了简化逻辑，这里做了处理
+        if (!['BaseTransition', 'Transition'].includes(instance.type.name)) {
+          nextTree.props = mergeProps(instance.attrs, nextTree.props)
+        }
         // 更新组件的虚拟DOM
         instance.subTree = nextTree
         // 更新组件
@@ -879,7 +895,7 @@ function baseCreateRenderer<
   };
 
   const remove: RemoveFn = (vnode) => {
-    const { el, type, anchor } = vnode
+    const { el, type, anchor, transition } = vnode
     if (type === Fragment) {
       removeFragment(el, anchor)
       return
@@ -887,8 +903,14 @@ function baseCreateRenderer<
     const performRemove = () => {
       hostRemove(el as HostNode)
     }
-    if (vnode.shapeFlag & ShapeFlags.ELEMENT) {
-      performRemove()
+    // if (vnode.shapeFlag & ShapeFlags.ELEMENT) {
+    //   performRemove()
+    // } else {
+    //   performRemove()
+    // }
+    //! 处理过渡
+    if (transition) {
+      transition.leave(el, performRemove)
     } else {
       performRemove()
     }

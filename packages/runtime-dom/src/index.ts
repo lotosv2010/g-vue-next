@@ -16,3 +16,4 @@ export const render = ((...args) => {
 }) as RootRenderFunction<Element>
 
 export * from '@g-vue-next/runtime-core'
+export * from './components/Transition'
