@@ -78,6 +78,8 @@ export interface VNode<
   
   // optimization
   shapeFlag: number
+
+  ssContent: VNode | null
 }
 
 const normalizeKey = ({ key }: VNodeProps): VNodeProps['key'] => 
@@ -112,6 +114,7 @@ function createBaseVNode(
     component: null, // 组件实例
     transition: null, // 过渡
     shapeFlag, // 元素节点的标识
+    ssContent: null, // 静态内容
     el: null, // 虚拟节点对应的真实元素节点
     target: null, // 组件的根节点
     key: props && normalizeKey(props), // 虚拟节点的key

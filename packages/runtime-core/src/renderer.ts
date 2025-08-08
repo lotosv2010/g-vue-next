@@ -8,6 +8,7 @@ import { renderComponentRoot, shouldUpdateComponent } from "./componentRenderUti
 import { updateSlots } from "./componentSlots";
 import { setRef } from "./rendererTemplateRef";
 import { TeleportEndKey, TeleportVNode } from "./components/Teleport";
+import { isKeepAlive, KeepAliveContext } from "@g-vue-next/runtime-dom";
 
 export interface Renderer<HostElement = RendererElement> {
   render: RootRenderFunction<HostElement>
@@ -359,6 +360,12 @@ function baseCreateRenderer<
   ) => { 
     // 首次挂载
     if (n1 === null) {
+      // 如果组件是被 KeepAlive 组件 缓存过的，则需要进行激活处理
+      if (n2.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
+        const { activate } = parentComponent.ctx as KeepAliveContext
+        activate?.(n2, container, anchor, namespace, true)
+        return
+      }
       mountComponent(
         n2,
         container,
@@ -442,6 +449,9 @@ function baseCreateRenderer<
     // 1.创建组件实例
     const instance = (initialVNode.component = createComponentInstance(initialVNode, parentComponent, parentSuspense))
     // 2.初始化组件实例，给组件实例添加 props, data, proxy, render 等属性
+    if (isKeepAlive(initialVNode)) {
+      instance.ctx.renderer = internals
+    }
     setupComponent(instance)
     // 3.创建组件实例的 effect 函数，并执行
     setupRenderEffect(
@@ -858,6 +868,13 @@ function baseCreateRenderer<
     optimize = false
   ) => {
     const { shapeFlag } = vnode
+
+    // 判断是否是KeepAlive 组件
+    if (shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
+      const { deactivate } = parentComponent.ctx as KeepAliveContext
+      deactivate(vnode)
+      return
+    }
     // 卸载组件
     if (shapeFlag & ShapeFlags.COMPONENT) {
       unmountComponent(vnode.component, parentSuspense, doRemove)

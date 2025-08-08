@@ -51,3 +51,9 @@ export const invokeArrayFns = (fns, ...arg) => {
     fns[i](...arg)
   }
 }
+// 获取类型
+export const toTypeString = (value: unknown) =>
+  Object.prototype.toString.call(value)
+// 判断是否正则
+export const isRegExp = (val: unknown): val is RegExp =>
+  toTypeString(val) === '[object RegExp]'

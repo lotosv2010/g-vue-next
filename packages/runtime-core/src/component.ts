@@ -240,3 +240,12 @@ export function getComponentPublicInstance(
     return instance.proxy
   }
 }
+
+export function getComponentName(
+  Component: any,
+  includeInherited: boolean = true
+): string | false | undefined {
+  return isFunction(Component) 
+  ? Component?.displayName || Component?.name 
+  : Component.name || (includeInherited && Component?.__name)
+}
