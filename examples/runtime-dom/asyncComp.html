@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AsyncComp</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // import { render, h, Text, Fragment, defineAsyncComponent } from "../../node_modules/vue/dist/vue.esm-browser.js"
+      import { render, h, Text, Fragment, defineAsyncComponent } from "../../packages/runtime-dom/dist/runtime-dom.esm.js";
+
+      // 异步组件的原理 类似图片懒加载
+      // 基于状态来实现 loaded ? h(Component) : h(placeholder)
+      // const Comp = defineAsyncComponent(() =>
+      //   import(/* webpackChunkName: "AsyncComp" */ "./AsyncComp.js")
+      // );
+      const Comp = defineAsyncComponent({
+        // loader: () => import("./AsyncComp.js"),
+        // loader: () => new Promise((resolve) => setTimeout(() => resolve(import("./AsyncComp1.js")), 2000)), // test error
+        loader: () => new Promise((resolve) => setTimeout(() => resolve(import("./AsyncComp.js")), 2000)),
+        loadingComponent() {
+          return h("div", "loading...");
+        },
+        errorComponent:{
+          props: {
+            error: Object
+          },
+          render() {
+            return h('div', this.$props?.error?.message || 'error')
+          }
+        },
+        // timeout: 1000,
+        // delay: 500,
+        onError(error, retry, fail, retries) {
+          console.log('onError', retries)
+          if(retries < 3) {
+            retry()
+          } else {
+            fail()
+          }
+        }
+      });
+
+      render(h(Comp), document.getElementById("app"))
+    </script>
+  </body>
+</html>
