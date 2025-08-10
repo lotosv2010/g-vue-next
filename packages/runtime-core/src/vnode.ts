@@ -78,6 +78,9 @@ export interface VNode<
   
   // optimization
   shapeFlag: number
+  patchFlag: number
+  dynamicProps: string[] | null
+  dynamicChildren: (VNode[] & { hasOnce?: boolean }) | null
 
   ssContent: VNode | null
 }
@@ -104,7 +107,10 @@ function createBaseVNode(
   type: VNodeTypes,
   props: (VNodeProps | Record<string, unknown>) | null = null,
   children: unknown = null,
-  shapeFlag: number = type === Fragment ? 0 : ShapeFlags.ELEMENT
+  patchFlag = 0,
+  dynamicProps: string[] | null = null,
+  shapeFlag = type === Fragment ? 0 : ShapeFlags.ELEMENT,
+  isBlockNode = false,
 ) {
   const vnode = {
     __v_isVNode: true,
@@ -119,8 +125,14 @@ function createBaseVNode(
     target: null, // 组件的根节点
     key: props && normalizeKey(props), // 虚拟节点的key
     ref: props && normalizeRef(props),
+    patchFlag,
+    dynamicProps, 
+    dynamicChildren: null,
   } as VNode
 
+  if (currentBlock && patchFlag > 0) {
+    currentBlock.push(vnode)
+  }
   // 如果有子节点，则标记子节点的类型
   if(children) {
     // 获取子节点的类型
@@ -142,7 +154,10 @@ function createBaseVNode(
 function _createVNode(
   type: VNodeTypes,
   props: (VNodeProps | Record<string, unknown>) | null = null,
-  children: unknown = null
+  children: unknown = null,
+  patchFlag: number = 0,
+  dynamicProps: string[] | null = null,
+  isBlockNode = false,
 ): VNode {
   const shapeFlag = isString(type) // 元素节点
     ? ShapeFlags.ELEMENT
@@ -153,7 +168,7 @@ function _createVNode(
     : isFunction(type) // 函数式组件节点
     ? ShapeFlags.FUNCTIONAL_COMPONENT
     : 0
-  return createBaseVNode(type, props, children, shapeFlag)
+  return createBaseVNode(type, props, children, patchFlag, dynamicProps, shapeFlag, isBlockNode)
 }
 
 export const Text = Symbol.for('v-text')
@@ -218,3 +233,61 @@ export function mergeProps(...args: (Data & VNodeProps)[]) {
 }
 
 export const createVNode = _createVNode
+
+export {createBaseVNode as createElementVNode }
+
+export const blockStack: VNode['dynamicChildren'][] = []
+export let currentBlock: VNode['dynamicChildren'] = null
+
+export function openBlock(disableTracking = false) {
+  blockStack.push((currentBlock = disableTracking ? null : []))
+}
+export function closeBlock() {
+  blockStack.pop()
+  currentBlock = blockStack[blockStack.length - 1] || null
+}
+export function createElementBlock(
+  type: string | typeof Fragment,
+  props?: Record<string, any> | null,
+  children?: any,
+  patchFlag?: number,
+  dynamicProps?: string[],
+  shapeFlag?: number,
+) {
+  return setupBlock(
+    createBaseVNode(
+      type,
+      props,
+      children,
+      patchFlag,
+      dynamicProps,
+      shapeFlag,
+      true /* isBlock */
+    )
+  )
+}
+
+export function createBlock(
+  type: VNodeTypes,
+  props?: Record<string, any> | null,
+  children?: any,
+  patchFlag?: number,
+  dynamicProps?: string[]
+) {
+  return setupBlock(
+    createVNode(
+      type,
+      props,
+      children,
+      patchFlag,
+      dynamicProps,
+      true /* isBlock: prevent a block from tracking itself */,
+    )
+  )
+}
+
+export function setupBlock(vnode: VNode) {
+  vnode.dynamicChildren = currentBlock || null
+  closeBlock()
+  return vnode
+}

@@ -1,3 +1,5 @@
 export * from './general'
 export * from './shapeFlags'
 export * from './normalizeProps'
+export * from './toDisplayString'
+export * from './patchFlags'

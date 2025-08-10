@@ -57,3 +57,16 @@ export const toTypeString = (value: unknown) =>
 // 判断是否正则
 export const isRegExp = (val: unknown): val is RegExp =>
   toTypeString(val) === '[object RegExp]'
+// 获取toString方法
+export const objectToString = Object.prototype.toString
+// 判断是否map
+export const isMap = (val: unknown): val is Map<any, any> =>
+  toTypeString(val) === '[object Map]'
+// 判断是否set
+export const isSet = (val: unknown): val is Set<any> =>
+  toTypeString(val) === '[object Set]'
+// 判断是否symbol
+export const isSymbol = (val: unknown): val is symbol => typeof val === 'symbol'
+// 判断是否对象
+export const isPlainObject = (val: unknown): val is object =>
+  toTypeString(val) === '[object Object]'

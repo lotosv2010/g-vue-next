@@ -1,4 +1,4 @@
-import { invokeArrayFns, isNil, NOOP, ShapeFlags } from "@g-vue-next/shared";
+import { EMPTY_OBJ, invokeArrayFns, isNil, NOOP, PatchFlags, ShapeFlags } from "@g-vue-next/shared";
 import { Comment, Fragment, isSameVNodeType, mergeProps, normalizeVNode, Text, type VNode, type VNodeArrayChildren } from "./vnode";
 import { ComponentInternalInstance, createComponentInstance, setupComponent } from "./component";
 import { ReactiveEffect } from "@g-vue-next/reactivity";
@@ -818,14 +818,80 @@ function baseCreateRenderer<
     // 2.比较元素的属性和子节点
     const el = (n2.el = n1.el) // 获取元素的真实DOM，复用
     
-    const oldProps = (n1.props || null) // 老属性
-    const newProps = (n2.props || null) // 新属性
+    const oldProps = (n1.props || EMPTY_OBJ as any) // 老属性
+    const newProps = (n2.props || EMPTY_OBJ as any) // 新属性
+
+    let { patchFlag, dynamicChildren } = n2
 
     // 比较属性是否变化了
-    patchProps(el, oldProps, newProps, parentComponent, namespace)
+    if (patchFlag > 0) {
+      if (patchFlag & PatchFlags.CLASS) {
+        if (oldProps.class !== newProps.class) {
+          hostPatchProp(el as any, 'class', null, newProps.class)
+        }
+      } else if (patchFlag & PatchFlags.STYLE) {
+        if (oldProps.style !== newProps.style) {
+          hostPatchProp(el as any, 'style', oldProps.style, newProps.style)
+        }
+      } else if (patchFlag & PatchFlags.TEXT) {
+        if (n1.children !== n2.children) {
+          return hostSetElementText(el as any, n2.children as string)
+        }
+      } 
+      // TODO 进一步进行优化
+      // ....
+    } else {
+      // full diff
+      patchProps(el, oldProps, newProps, parentComponent, namespace)
+    }
 
     // 比较子节点差异
-    patchChildren(n1, n2, el, null, parentComponent, parentSuspense, namespace)
+    if (dynamicChildren) {
+      // 线性比对
+      patchBlockChildren(
+        n1.dynamicChildren!,
+        dynamicChildren,
+        el,
+        parentComponent,
+        parentSuspense,
+        namespace
+      )
+    } else {
+      // 全量 diff
+      patchChildren(n1, n2, el, null, parentComponent, parentSuspense, namespace) 
+    }
+    
+  }
+  const patchBlockChildren: any = (
+    oldChildren,
+    newChildren,
+    fallbackContainer,
+    parentComponent,
+    parentSuspense,
+    namespace: ElementNamespace,
+    slotScopeIds,
+  ) => {
+    for (let i = 0; i < newChildren.length; i++) {
+      const oldVNode = oldChildren[i]
+      const newVNode = newChildren[i]
+      const container =
+        oldVNode.el &&
+        (oldVNode.type === Fragment ||
+          !isSameVNodeType(oldVNode, newVNode) ||
+          oldVNode.shapeFlag & (ShapeFlags.COMPONENT | ShapeFlags.TELEPORT))
+          ? hostParentNode(oldVNode.el)!
+          : 
+            fallbackContainer
+      patch(
+        oldVNode,
+        newVNode,
+        container,
+        null,
+        parentComponent,
+        parentSuspense,
+        namespace
+      )
+    }
   }
   const updateComponent = (n1: VNode, n2: VNode) => {
     //! 组件的更新逻辑: 组件更新的方式有三种（状态[data]、属性[props]、插槽[slot]）
