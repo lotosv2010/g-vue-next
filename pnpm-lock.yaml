@@ -25,6 +25,21 @@ importers:
         specifier: ^5.8.3
         version: 5.8.3
 
+  packages/compiler-core:
+    dependencies:
+      '@g-vue-next/shared':
+        specifier: workspace:^
+        version: link:../shared
+
+  packages/compiler-dom:
+    dependencies:
+      '@g-vue-next/compiler-core':
+        specifier: workspace:^
+        version: link:../compiler-core
+      '@g-vue-next/shared':
+        specifier: workspace:^
+        version: link:../shared
+
   packages/reactivity:
     dependencies:
       '@g-vue-next/shared':
@@ -56,6 +71,12 @@ importers:
 
   packages/vue:
     dependencies:
+      '@g-vue-next/compiler-core':
+        specifier: workspace:^
+        version: link:../compiler-core
+      '@g-vue-next/compiler-dom':
+        specifier: workspace:^
+        version: link:../compiler-dom
       '@g-vue-next/reactivity':
         specifier: workspace:^
         version: link:../reactivity

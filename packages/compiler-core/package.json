@@ -1,0 +1,27 @@
+{
+  "name": "@g-vue-next/compiler-core",
+  "version": "3.4.0",
+  "description": "",
+  "module": "dist/compiler-core.esm.js",
+  "buildOptions": {
+    "name": "GVueNextCompilerCore",
+    "formats": [
+      "esm-bundler",
+      "esm",
+      "cjs"
+    ]
+  },
+  "scripts": {},
+  "keywords": [
+    "vue-next",
+    "vue",
+    "vue3",
+    "compiler-core"
+  ],
+  "author": "Robin",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.1",
+  "dependencies": {
+    "@g-vue-next/shared": "workspace:^"
+  }
+}

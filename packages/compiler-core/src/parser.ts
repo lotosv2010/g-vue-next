@@ -1,0 +1,1 @@
+export function baseParse(input: string, options?: any) {}

@@ -1,0 +1,1 @@
+export * from '@g-vue-next/compiler-core'

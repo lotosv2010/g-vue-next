@@ -22,6 +22,8 @@
   "author": "Robin",
   "license": "ISC",
   "dependencies": {
+    "@g-vue-next/compiler-core": "workspace:^",
+    "@g-vue-next/compiler-dom": "workspace:^",
     "@g-vue-next/reactivity": "workspace:^",
     "@g-vue-next/runtime-core": "workspace:^",
     "@g-vue-next/runtime-dom": "workspace:^",
