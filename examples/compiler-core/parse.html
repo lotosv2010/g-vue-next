@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>parse</title>
+</head>
+<body>
+  <script type="module">
+    // import { parse } from '../../node_modules/.pnpm/@vue+compiler-dom@3.5.18/node_modules/@vue/compiler-dom/dist/compiler-dom.esm-browser.js'
+    import { parse } from '../../packages/vue/dist/vue.esm.js'
+    // console.log(parse('内容'))
+    // console.log(parse('<div  ></div>'))
+    // console.log(parse('<div><span><a></a></span></div>'))
+    // console.log(parse('内容 {{ name }}'))
+    // console.log(parse('<div>内容 {{ name }}</div>'))
+    console.log(parse('<div a="1" b="true" id="app" c=" 11 " d = 3 ></div>'))
+    // console.log(parse(`
+    //   <div>
+    //     <div></div>
+
+    //     <p></p>
+
+    //     {{ name }}
+
+    //     abc    abc     abc
+    //   </div>`))
+  </script>
+</body>
+</html>
