@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>transform</title>
+</head>
+<body>
+  <script type="module">
+    import { compile, parse, transform} from '../../node_modules/.pnpm/@vue+compiler-dom@3.5.18/node_modules/@vue/compiler-dom/dist/compiler-dom.esm-browser.js'
+    // import { compile } from '../../packages/vue/dist/vue.esm.js'
+    // console.log(compile('{{name}}'))
+    // console.log(compile('<div>123</div>'))
+    // console.log(compile('<div>{{name}} abc <div></div> abc {{name}} + c</div>'))
+    // console.log(compile('<div>{{name}} abc abc {{name}} + c</div>'))
+    // console.log(compile('{{ name }} abc <div id="app">123</div>'))
+    // console.log(compile('<div id="app" class="main">123</div>'))
+    console.log(compile('<div id="app" class="main"><p>123</p></div>'))
+    console.log(compile('<div id="app" class="main">123</div><div id="app2" class="main2">abc</div>'))
+  </script>
+</body>
+</html>

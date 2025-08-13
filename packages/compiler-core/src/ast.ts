@@ -1,3 +1,7 @@
+import { isString } from "@g-vue-next/shared"
+import { TransformContext } from "./transform"
+import { CREATE_VNODE, CREATE_ELEMENT_VNODE, OPEN_BLOCK, CREATE_BLOCK, CREATE_ELEMENT_BLOCK, WITH_DIRECTIVES } from "./runtimeHelpers"
+
 export type Namespace = number
 
 export enum Namespaces {
@@ -47,6 +51,13 @@ export enum ElementTypes {
   TEMPLATE,
 }
 
+export enum ConstantTypes {
+  NOT_CONSTANT = 0,
+  CAN_SKIP_PATCH,
+  CAN_HOIST,
+  CAN_STRINGIFY,
+}
+
 export interface Node {
   type: NodeTypes
   loc: SourceLocation
@@ -83,6 +94,22 @@ export interface RootNode extends Node {
   transformed?: boolean
 }
 
+export type ParentNode = RootNode 
+
+export interface VNodeCall extends Node {
+  type: NodeTypes.VNODE_CALL
+  tag: string
+  props: any
+  children: any
+  patchFlag: string
+  dynamicProps: string
+  directives: any
+  isBlock: boolean
+  disableTracking: boolean
+  isComponent: boolean
+
+}
+
 export const locStub = {
   start: { line: 1, column: 1, offset: 0 },
   end: { line: 1, column: 1, offset: 0 },
@@ -102,5 +129,133 @@ export function createRoot(children: TemplateChildNode[], source = ''): RootNode
     temps: 0,
     codegenNode: null,
     loc: locStub
+  }
+}
+
+export function createCompoundExpression(
+  children: TemplateChildNode[],
+  loc: SourceLocation
+) {
+  return {
+    type: NodeTypes.COMPOUND_EXPRESSION,
+    children,
+    loc
+  }
+}
+
+export function createCallExpression(
+  callee,
+  args,
+  loc = locStub
+) {
+  return {
+    type: NodeTypes.JS_CALL_EXPRESSION,
+    callee,
+    arguments: args,
+    loc
+  }
+}
+
+export function getVNodeHelper(
+  ssr: boolean,
+  isComponent: boolean,
+): typeof CREATE_VNODE | typeof CREATE_ELEMENT_VNODE {
+  return ssr || isComponent ? CREATE_VNODE : CREATE_ELEMENT_VNODE
+}
+
+export function getVNodeBlockHelper(
+  ssr: boolean,
+  isComponent: boolean,
+): typeof CREATE_BLOCK | typeof CREATE_ELEMENT_BLOCK {
+  return ssr || isComponent ? CREATE_BLOCK : CREATE_ELEMENT_BLOCK
+}
+
+export function createVNodeCall(
+  context: TransformContext | null,
+  tag: string,
+  props?: any,
+  children?: any,
+  patchFlag?: any,
+  dynamicProps?: any,
+  directives?: any,
+  isBlock = false,
+  disableTracking = false,
+  isComponent = false,
+  loc = locStub
+) {
+  if (context) {
+    if (isBlock) {
+      context.helper(OPEN_BLOCK)
+      context.helper(getVNodeBlockHelper(context.inSSR, isComponent))
+    } else {
+      context.helper(getVNodeHelper(context.inSSR, isComponent))
+    }
+    if (directives) {
+      context.helper(WITH_DIRECTIVES)
+    }
+  }
+  return {
+    // callee: context && context.helper(CREATE_VNODE), 
+    type: NodeTypes.VNODE_CALL,
+    tag,
+    props,
+    children,
+    patchFlag,
+    dynamicProps,
+    directives,
+    isBlock,
+    disableTracking,
+    isComponent,
+    loc
+  }
+}
+
+export function createObjectExpression(
+  properties,
+  loc = locStub
+) {
+  return {
+    type: NodeTypes.JS_OBJECT_EXPRESSION,
+    properties,
+    loc
+  }
+}
+
+export function createObjectProperty(
+  key,
+  value
+) {
+  return {
+    type: NodeTypes.JS_PROPERTY,
+    key: isString(key) ? createSimpleExpression(key, true) : key,
+    value,
+    loc: locStub
+  }
+}
+
+export function createSimpleExpression(
+  content,
+  isStatic = false,
+  loc = locStub,
+  constType = ConstantTypes.NOT_CONSTANT
+) {
+  return {
+    type: NodeTypes.SIMPLE_EXPRESSION,
+    isStatic,
+    loc,
+    content,
+    constType: isStatic ? ConstantTypes.CAN_STRINGIFY : constType,
+  }
+}
+
+export function convertToBlock(
+  node: VNodeCall,
+  { helper, removeHelper, inSSR }: TransformContext
+) {
+  if (!node.isBlock) {
+    node.isBlock = true
+    removeHelper(getVNodeHelper(inSSR, node.isComponent))
+    helper(OPEN_BLOCK)
+    helper(getVNodeBlockHelper(inSSR, node.isComponent))
   }
 }
