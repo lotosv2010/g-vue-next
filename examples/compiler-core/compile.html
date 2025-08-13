@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>compile</title>
+</head>
+<body>
+  <script type="module">
+    // import { compile, parse, transform} from '../../node_modules/.pnpm/@vue+compiler-dom@3.5.18/node_modules/@vue/compiler-dom/dist/compiler-dom.esm-browser.js'
+    import { compile } from '../../packages/vue/dist/vue.esm.js'
+    console.log(compile(''))
+    console.log(compile('123'))
+    console.log(compile('{{name}}'))
+    console.log(compile('<div id="app" class="main"><p>123</p></div>'))
+    console.log(compile('<div id="app" class="main">123</div><div id="app2" class="main2">abc</div>'))
+    console.log(compile('<div id="app" class="main">123</div><div id="app2" class="main2">{{abc}}</div>'))
+  </script>
+</body>
+</html>
+
+<!--
+const { createElementVNode: _createElementVNode, Fragment: _Fragment, openBlock: _openBlock, createElementBlock: _createElementBlock } = Vue
+
+return function render(_ctx, _cache) {
+
+  return (_openBlock(), _createElementBlock(_Fragment, null, [
+    _createElementVNode("div", {
+      id: "app",
+      class: "main"
+    }, "123"),
+    _createElementVNode("div", {
+      id: "app2",
+      class: "main2"
+    }, "abc")
+  ], 64 /* STABLE_FRAGMENT */))
+}
+-->

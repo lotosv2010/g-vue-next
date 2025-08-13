@@ -13,7 +13,7 @@ export const CREATE_ELEMENT_BLOCK = Symbol('createElementBlock')
 export const WITH_DIRECTIVES = Symbol('withDirectives')
 export const FRAGMENT = Symbol('Fragment')
 
-export const helperMapName = {
+export const helperNameMap = {
   [TO_DISPLAY_STRING]: 'toDisplayString',
   [CREATE_COMMENT]: 'createCommentVNode',
   [CREATE_TEXT]: 'createTextVNode',

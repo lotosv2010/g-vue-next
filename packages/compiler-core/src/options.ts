@@ -46,3 +46,24 @@ export interface TransformOptions extends ErrorHandler, CompilerOptions {
   ssrCssVars?: string
   hrm?: boolean
 }
+
+interface SharedTransformCodegenOptions {
+  prefixIdentifiers?: boolean
+  ssr?: boolean
+  inSSR?: boolean
+  bindingMetadata?: any
+  inline?: boolean
+  isTS?: boolean
+  filename?: string
+}
+
+export interface CodegenOptions extends SharedTransformCodegenOptions {
+  mode?: 'module' | 'function'
+  sourceMap?: boolean
+  scopeId?: string | null
+  optimizeImports?: boolean
+  runtimeModuleName?: string
+  ssrRuntimeModuleName?: string
+  runtimeGlobalName?: string
+
+}

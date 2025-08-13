@@ -130,22 +130,29 @@ export function transform(root: any, options: any) {
   // 对根节点的处理
   createRootCodegen(root, context)
   root.helpers = new Set([...context.helpers.keys()])
-  console.log(root)
+  root.transformed = true
+}
+
+function getSingleElementRoot(
+  root: RootNode
+) {
+  const children = root.children.filter(x => x.type !== NodeTypes.COMMENT)
+  return children.length === 1 && children[0].type === NodeTypes.ELEMENT ? children[0] : null
 }
 
 function createRootCodegen(root: RootNode, context: any) {
   const { helper } = context
   const { children } = root
   if (children.length === 1) {
-    const child = children[0]
-    if (child.type === NodeTypes.ELEMENT) { // 元素节点
-      const codegenNode = child.codegenNode
+    const singleElementRootChild = getSingleElementRoot(root)
+    if (singleElementRootChild && singleElementRootChild.codegenNode) { // 元素节点
+      const codegenNode = singleElementRootChild.codegenNode
       if (codegenNode.type === NodeTypes.VNODE_CALL) {
         convertToBlock(codegenNode, context)
       }
       root.codegenNode = codegenNode
     } else { // 文本节点
-      root.codegenNode = child
+      root.codegenNode = children[0]
     }
   } else if (children.length > 1) {
     let patchFlag = PatchFlags.STABLE_FRAGMENT
